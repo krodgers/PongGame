@@ -3,6 +3,7 @@
 #include <cmath>
 #include "pong.h"
 
+#define WALL_OFFSET 4
 
   pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddleStartX, int paddleStartY){
 
@@ -34,13 +35,16 @@
 
   }
 
-  void  pong::update(){
-    if(std::abs(ballx - paddlex)  < 10 && std::abs(bally - paddley) < 10){
+// paddleDirection: 1/-1 for up/down
+// paddleX assumed to be constant
+void  pong::update(int paddleDirection, int paddleY){
+  paddley = paddleY;
+    if(std::abs(ballx - paddlex)  < 5 && std::abs(bally - paddley) < 10){
       // close enough; counts as hit
       score ++;
       xspeed = -xspeed;
       yspeed = std::floor(paddleDirection * yspeed / 2) + 1;
-      ballx = ballx + 10;
+      ballx = ballx + WALL_OFFSET;
       return;
     }
     ballx += xspeed;
@@ -52,9 +56,9 @@
       reset();
       totalTries++;
       return;
-    } else if( ballx > width){
+    } else if( ballx >= width){
       // ball hit right wall
-      ballx = width - 10;
+      ballx = width - WALL_OFFSET;
       xspeed = -xspeed;
       if(yspeed > 0){
 	// going up, needs to go down
@@ -67,11 +71,11 @@
     if(bally > 0){
       // went through top
       yspeed = -yspeed;
-      bally = -5;
+      bally = -WALL_OFFSET;
     } else if(bally < -height){
       // went through floor
       yspeed = -yspeed;
-      bally = -(height - 5); // put just about the floor
+      bally = -(height - WALL_OFFSET); // put just about the floor
     }
     
     
@@ -90,7 +94,8 @@
     bally = 0;
     paddley = std::floor(height/2);
     paddlex = 0;
-   
+    xspeed = 10;
+    yspeed = 0;
   }
 
  

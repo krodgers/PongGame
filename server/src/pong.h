@@ -21,7 +21,7 @@ public:
 
   void setPaddlePos(int x, int y);
 
-  void update();
+  void update(int paddleDirection, int paddleY);
 
   double distance();
 
