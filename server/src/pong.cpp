@@ -68,6 +68,10 @@ void  pong::setBallPos(int x, int y){
 
 }
 
+void pong::setBallSpeed(double speedX, double speedY){
+  xspeed = speedX;
+  yspeed = speedY;
+}
 void  pong::setPaddlePos(int x, int y){
   paddlex = x;
   paddley = y;
@@ -83,11 +87,17 @@ void pong::setPaddleDimensions(int h, int w){
 // paddleX assumed to be constant
 void  pong::update(int paddleDirection, int paddleY){
   paddley = paddleY;
-  bool closeX = (ballx - ballradius) + paddleWidth >= paddlex; // left wall
-  closeX = closeX || (ballx + ballradius) + paddleWidth >= paddlex+paddleWidth; // right wall
-  if(closeX && (bally+ballradius <= paddley && bally-ballradius >= (paddley - paddleHeight) )){
+
+  ballx += xspeed;
+  bally += yspeed;
+  
+  bool closeX = (ballx - ballradius)  <= paddlex + paddleWidth; // left wall; 
+ 
+// closeX = closeX || (ballx + ballradius) + paddleWidth >= paddlex+paddleWidth; // right wall; need to add for 2 players
+  if(closeX && (bally-ballradius <= paddley && bally+ballradius >= (paddley - paddleHeight) )){
     // close enough; counts as hit
     score ++;
+    totalTries ++;
     xspeed = -xspeed;
     switch(paddleDirection){
     case 1:
@@ -104,8 +114,6 @@ void  pong::update(int paddleDirection, int paddleY){
     ballx = ballx + WALL_OFFSET;
     return;
   }
-  ballx += xspeed;
-  bally += yspeed;
     
   if(ballx-ballradius < 0 ){
     // went through left wall

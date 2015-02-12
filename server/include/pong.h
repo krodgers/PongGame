@@ -26,6 +26,7 @@ class pong{
 
   void setBallPos(int x, int y);
   void setBallRadius(int);
+  void setBallSpeed(double speedX, double speedY);
 
   void setPaddlePos(int x, int y);
   void setPaddleDimensions(int h , int w);
