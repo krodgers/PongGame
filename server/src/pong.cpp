@@ -12,8 +12,8 @@ pong::pong(){
  yspeed = rand() % 3;
   boardHeight = 500;
   boardWidth = 500;
-  ballx = 10;
-  bally = 10;
+  ballx = 250;
+  bally = 250;
   paddlex = 0;
   paddley = bally;
   score = 0;
@@ -25,11 +25,11 @@ pong::pong(){
 }
 pong::pong(int screenHeight, int screenWidth){
   xspeed = 10;
- yspeed = rand() % 3;
+  yspeed = rand() % 3;
   boardHeight = screenHeight;
   boardWidth = screenWidth;
   ballx = std::floor(screenWidth/2);
-  bally = -1*std::floor(screenHeight/2);
+  bally = std::floor(screenHeight/2);
   paddlex = 0;
   paddley = bally;
   score = 0;
@@ -96,7 +96,7 @@ void  pong::update(int paddleDirection, int paddleY){
   bool closeX = (ballx - ballradius)  <= paddlex + paddleWidth; // left wall; 
  
 // closeX = closeX || (ballx + ballradius) + paddleWidth >= paddlex+paddleWidth; // right wall; need to add for 2 players
-  if(closeX && (bally-ballradius <= paddley && bally+ballradius >= (paddley - paddleHeight) )){
+  if(closeX && (bally+ballradius >= paddley &&( bally-ballradius <= (paddley + paddleHeight)) )){
     // close enough; counts as hit
     score ++;
     totalTries ++;
@@ -135,14 +135,14 @@ void  pong::update(int paddleDirection, int paddleY){
 	
   }
 
-  if(bally+ballradius > 0){
+  if(bally-ballradius < 0){
     // went through top
     yspeed = -yspeed;
-    bally = -WALL_OFFSET;
-  } else if(bally-ballradius < -boardHeight){
+    bally = WALL_OFFSET;
+  } else if(bally+ballradius > boardHeight){
     // went through floor
     yspeed = -yspeed;
-    bally = -(boardHeight - WALL_OFFSET); // put just about the floor
+    bally = boardHeight - WALL_OFFSET; // put just about the floor
   }
     
     
@@ -162,9 +162,9 @@ void  pong::reset(){
   xspeed = 10;
   yspeed = rand() % 3;
   ballx = std::floor(boardWidth/2);
-  bally = -1*std::floor(boardHeight/2);
+  bally = std::floor(boardHeight/2);
   paddlex = 0;
-  paddley = bally;
+  paddley = std::floor(boardHeight/2);;
   paddleDirection = 1;
   ballradius = 5;
 }
