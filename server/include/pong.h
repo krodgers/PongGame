@@ -30,6 +30,8 @@ class pong{
 
   void setPaddlePos(int x, int y);
   void setPaddleDimensions(int h , int w);
+
+  void update();
   void update(int paddleDirection, int paddleY);
 
   double distance();

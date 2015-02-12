@@ -82,7 +82,9 @@ void pong::setPaddleDimensions(int h, int w){
   paddleHeight = h;
 }
 
-
+void pong::update(){
+  update(paddleDirection, paddley);
+}
 // paddleDirection: 1/-1 for up/down
 // paddleX assumed to be constant
 void  pong::update(int paddleDirection, int paddleY){
