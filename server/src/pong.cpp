@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <cmath>
 #include "pong.h"
@@ -8,7 +9,7 @@
 
 pong::pong(){
  xspeed = 10;
-  yspeed = 1;
+ yspeed = rand() % 3;
   boardHeight = 500;
   boardWidth = 500;
   ballx = 10;
@@ -24,7 +25,7 @@ pong::pong(){
 }
 pong::pong(int screenHeight, int screenWidth){
   xspeed = 10;
-  yspeed = 1;
+ yspeed = rand() % 3;
   boardHeight = screenHeight;
   boardWidth = screenWidth;
   ballx = std::floor(screenWidth/2);
@@ -41,7 +42,7 @@ pong::pong(int screenHeight, int screenWidth){
 pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddleStartX, int paddleStartY){
 
   xspeed = 10;
-  yspeed = 1;
+ yspeed = rand() % 3;
 
   boardHeight = screenHeight;
   boardWidth = screenWidth;
@@ -82,11 +83,24 @@ void pong::setPaddleDimensions(int h, int w){
 // paddleX assumed to be constant
 void  pong::update(int paddleDirection, int paddleY){
   paddley = paddleY;
-  if(std::abs(ballx+ballradius - paddlex)  <= paddleWidth && std::abs(bally+ballradius - paddley) <= paddleHeight){
+  bool closeX = (ballx - ballradius) + paddleWidth >= paddlex; // left wall
+  closeX = closeX || (ballx + ballradius) + paddleWidth >= paddlex+paddleWidth; // right wall
+  if(closeX && (bally+ballradius <= paddley && bally-ballradius >= (paddley - paddleHeight) )){
     // close enough; counts as hit
     score ++;
     xspeed = -xspeed;
-    yspeed = std::floor(paddleDirection * yspeed / 2) + 1;
+    switch(paddleDirection){
+    case 1:
+      yspeed = abs(yspeed) + 1/2.0; // faster up
+      break;
+    case -1:
+      yspeed = -yspeed - 1/2.0; // faster down
+      break;
+    case 0:
+    default:
+      yspeed = -yspeed; // bounce 90 deg (?)
+      
+    }
     ballx = ballx + WALL_OFFSET;
     return;
   }
@@ -133,14 +147,10 @@ double  pong::distance(){
 }
 
 void  pong::reset(){
-  ballx = 0;
-  bally = 0;
   paddley = std::floor(boardHeight/2);
   paddlex = 0;
   xspeed = 10;
-  yspeed = 0;
-  xspeed = 10;
-  yspeed = 1;
+  yspeed = rand() % 3;
   ballx = std::floor(boardWidth/2);
   bally = -1*std::floor(boardHeight/2);
   paddlex = 0;

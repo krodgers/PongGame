@@ -1,9 +1,6 @@
 #ifndef __PONG_H__
 #define __PONG_H__
 
-#include <stdio.h>
-#include <iostream>
-#include <cmath>
 
 class pong{
 
@@ -15,7 +12,7 @@ class pong{
   
 
  public:
-  int  ballx, bally,ballradius,
+  int  ballx, bally,ballradius;
 
   int boardHeight, boardWidth;
   int score;
