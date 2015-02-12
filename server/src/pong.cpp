@@ -20,7 +20,6 @@ pong::pong(){
   totalTries = 0;
   paddleDirection = 1;
   ballradius = 5;
-  gameObjectSet = false;
 
 }
 pong::pong(int screenHeight, int screenWidth){
@@ -36,7 +35,6 @@ pong::pong(int screenHeight, int screenWidth){
   totalTries = 0;
   paddleDirection = 1;
   ballradius = 5;
-  gameObjectSet = false;
 }
 
 pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddleStartX, int paddleStartY){
@@ -46,7 +44,7 @@ pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, in
 
   boardHeight = screenHeight;
   boardWidth = screenWidth;
-    
+
   ballx = ballStartX;
   bally = ballStartY;
   ballradius = 5;
@@ -55,13 +53,12 @@ pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, in
 
   score = 0;
   totalTries = 0;
-  gameObjectSet = false;
 }
 
 void pong::setBallRadius(int r){
   ballradius = r;
 }
-  
+
 void  pong::setBallPos(int x, int y){
   ballx = x;
   bally = y;
@@ -72,6 +69,11 @@ void pong::setBallSpeed(double speedX, double speedY){
   xspeed = speedX;
   yspeed = speedY;
 }
+
+void pong::setPaddleDirection(int direction) {
+    paddleDirection = direction;
+}
+
 void  pong::setPaddlePos(int x, int y){
   paddlex = x;
   paddley = y;
@@ -82,9 +84,10 @@ void pong::setPaddleDimensions(int h, int w){
   paddleHeight = h;
 }
 
-void pong::update(){
-  update(paddleDirection, paddley);
+void pong::update() {
+    update(paddleDirection, paddley);
 }
+
 // paddleDirection: 1/-1 for up/down
 // paddleX assumed to be constant
 void  pong::update(int paddleDirection, int paddleY){
@@ -132,7 +135,7 @@ void  pong::update(int paddleDirection, int paddleY){
       yspeed = -5;
     } else
       yspeed = 5; // going down, needs to go up
-	
+
   }
 
   if(bally+ballradius > 0){
@@ -144,9 +147,9 @@ void  pong::update(int paddleDirection, int paddleY){
     yspeed = -yspeed;
     bally = -(boardHeight - WALL_OFFSET); // put just about the floor
   }
-    
-    
-    
+
+
+
 }
 
 double  pong::distance(){
@@ -169,4 +172,4 @@ void  pong::reset(){
   ballradius = 5;
 }
 
- 
+
