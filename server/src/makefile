@@ -1,5 +1,5 @@
 all: pong.cpp sha1.cpp websocket.cpp base64.cpp Server.cpp
-	g++ -g -std=gnu++11 -I../include pong.cpp sha1.cpp websocket.cpp base64.cpp Server.cpp filesforponggame/main.cpp -lpthread
+	g++ -g -std=gnu++11 -I../include pong.cpp sha1.cpp websocket.cpp base64.cpp Server.cpp filesforponggame/main.cpp -lpthread -L../include -ljsoncpp
 
 
 ChipTest: ChipmunkExample.cpp
