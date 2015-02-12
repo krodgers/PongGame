@@ -14,6 +14,7 @@ uniform_int_distribution<int> distribution(70,600);
 
 // constructor
 void* Server(void* port) {
+  //printf("SERVER\n");
 	server.setOpenHandler(openHandler);
 	server.setCloseHandler(closeHandler);
 	server.setMessageHandler(messageHandler);
@@ -29,7 +30,7 @@ void setPongGame(pong &game) {
 
 /* called when a client connects */
 void openHandler(int clientID){
-
+  printf("OPENHAND\n");
 	string json = "{\"phase\":\"initialization\"}";
 	server.wsSend(clientID, json);
 }

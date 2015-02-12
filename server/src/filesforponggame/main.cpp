@@ -38,6 +38,7 @@ int main(int argc, char *argv[]){
 
 	while (true)
 	{
+	  //	  cout << "a" << endl;
 		if (pongGame->gameObjectSet == true)
 		{
 
