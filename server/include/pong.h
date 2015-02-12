@@ -9,7 +9,7 @@ class pong{
   int paddleHeight, paddleWidth;
   int  paddlex, paddley;
   int paddleDirection;
-  
+
 
  public:
   int  ballx, bally,ballradius;
@@ -28,6 +28,7 @@ class pong{
   void setBallRadius(int);
   void setBallSpeed(double speedX, double speedY);
 
+  void setPaddleDirection(int);
   void setPaddlePos(int x, int y);
   void setPaddleDimensions(int h , int w);
 
@@ -37,8 +38,8 @@ class pong{
   double distance();
 
   void reset();
-  
-  
+
+
 };
 
-#endif 
+#endif
