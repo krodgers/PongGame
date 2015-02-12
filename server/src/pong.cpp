@@ -6,6 +6,9 @@
 
   pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddleStartX, int paddleStartY){
 
+    xspeed = 10;
+    yspeed = 0;
+
     height = screenHeight;
     width = screenWidth;
     
@@ -36,7 +39,7 @@
       // close enough; counts as hit
       score ++;
       xspeed = -xspeed;
-      yspeed = std::floor(paddleDirection * yspeed / 2);
+      yspeed = std::floor(paddleDirection * yspeed / 2) + 1;
       ballx = ballx + 10;
       return;
     }
