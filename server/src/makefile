@@ -1,11 +1,22 @@
-all: pong.cpp sha1.cpp websocket.cpp base64.cpp Server.cpp
-	g++ -g -std=gnu++11 -I../include pong.cpp sha1.cpp websocket.cpp base64.cpp Server.cpp filesforponggame/main.cpp -lpthread -L../include -ljsoncpp
+all: pong.o sha1.o websocket.o base64.o 
+	g++ -g  -I../include -D__linux__ pong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
 
-
-ChipTest: ChipmunkExample.cpp
-	g++ -g -Wall  -I../include -I../../../ChipmunkLibrary/Chipmunk-7.0.0/include/chipmunk  PongGameMain.cpp -L../include -lchipmunk -lpthread -static
 
 tests: pong.cpp testNewPHysics.cpp
-	g++ -g -Wall  -I../include pong.cpp testNewPHysics.cpp
+	g++ -g -Wall  -I../include pong.cpp testNewPHysics.cpp -o tests
 
 
+
+base64.o: base64.cpp
+	g++ -c -I../include base64.cpp
+websocket.o: websocket.cpp
+	g++ -c -I../include websocket.cpp
+pong.o: pong.cpp
+	g++ -c -I../include pong.cpp
+sha1.o: sha1.cpp
+	g++ -c -I../include sha1.cpp
+
+
+
+clean:
+	rm -f *.o tests server
