@@ -4,7 +4,7 @@
 #include <cmath>
 #include "pong.h"
 
-#define WALL_OFFSET 4
+#define WALL_OFFSET 8
 #define X_VELOCITY 400
 #define Y_VELOCITY 50
 #define Y_ADJUST 50
@@ -179,7 +179,6 @@ void  pong::reset(){
   paddlex = 0;
   paddley = std::floor(boardHeight/2);;
   paddleDirection = 1;
-  ballradius = 5;
 }
 
 

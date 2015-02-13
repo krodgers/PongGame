@@ -52,7 +52,7 @@ void showAvailableIP(){
     }
 
 #elif _WIN32
-    
+
     /* Variables used by GetIpAddrTable */
     PMIB_IPADDRTABLE pIPAddrTable;
     DWORD dwSize = 0;
@@ -82,7 +82,7 @@ void showAvailableIP(){
     }
     // Make a second call to GetIpAddrTable to get the
     // actual data we want
-    if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR ) { 
+    if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR ) {
         printf("GetIpAddrTable failed with error %d\n", dwRetVal);
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
                           (LPTSTR) & lpMsgBuf, 0, NULL)) {
@@ -111,7 +111,7 @@ vector<int> webSocket::getClientIDs(){
     vector<int> clientIDs;
     for (int i = 0; i < wsClients.size(); i++){
         if (wsClients[i] != NULL)
-            clientIDs.push_back(i);    
+            clientIDs.push_back(i);
     }
 
     return clientIDs;
@@ -631,6 +631,7 @@ void webSocket::wsAddClient(int socket, in_addr ip){
         fdmax = socket;
 
     int clientID = wsGetNextClientID();
+    cout << clientID << endl;
     wsClient *newClient = new wsClient(socket, ip);
     if (clientID >= wsClients.size()){
         wsClients.push_back(newClient);
@@ -706,12 +707,16 @@ void webSocket::startServer(int port){
             for (int i = 0; i <= fdmax; i++){
                 if (FD_ISSET(i, &read_fds)){
                     if (i == listenfd){
-                        socklen_t addrlen = sizeof(cli_addr);
-                        int newfd = accept(listenfd, (struct sockaddr*)&cli_addr, &addrlen);
-                        if (newfd != -1){
-                            /* add new client */
-                            wsAddClient(newfd, cli_addr.sin_addr);
-                            printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), newfd);
+                        vector<int> currentIDs = getClientIDs();
+                        if (currentIDs.size() <= 0)
+                        {
+                            socklen_t addrlen = sizeof(cli_addr);
+                            int newfd = accept(listenfd, (struct sockaddr*)&cli_addr, &addrlen);
+                            if (newfd != -1){
+                                /* add new client */
+                                wsAddClient(newfd, cli_addr.sin_addr);
+                                printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), newfd);
+                            }
                         }
                     }
                     else {

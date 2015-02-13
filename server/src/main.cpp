@@ -78,7 +78,7 @@ void* GameLoop(void* arg) {
         for (int i = 0; i < clientIDs.size(); i++){
             server.wsSend(clientIDs[i], json.str());
         }
-	  
+
 	  // Only send score updates sometimes
 	  if(scoreUpdateCounter % 10 == 0){
 	    scoreUpdateCounter = 0;
@@ -88,7 +88,7 @@ void* GameLoop(void* arg) {
 	    for (int i = 0; i < clientIDs.size(); i++){
 	      server.wsSend(clientIDs[i], jsonScoring.str());
 	    }
-	 
+
 	  }
 	  scoreUpdateCounter++;
 	  usleep(1000000/60);
@@ -186,7 +186,7 @@ void messageHandler(int clientID, string message){
     pongGame->setPaddlePos(paddleDims[0], paddleDims[1]);
     pongGame->setPaddleDimensions(paddleDims[2], paddleDims[3]);
     pongGame->setBallPos(mapDims[2]/2, mapDims[3]/2);
-    pongGame->setBallRadius(5);
+    pongGame->setBallRadius(10);
 
     //setMapInfo(mapDims, paddleDims);
     checkPartnerPresent(clientID);
