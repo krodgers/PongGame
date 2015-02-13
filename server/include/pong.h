@@ -8,6 +8,9 @@
 
 #ifndef __PONG_H__
 #define __PONG_H__
+#include <stdlib.h>
+#include <iostream>
+#include <string>
 
 
 class pong{
@@ -20,7 +23,8 @@ class pong{
 
 
  public:
-  int  ballx, bally,ballradius;
+  double ballx, bally;
+  int ballradius;
 
   int boardHeight, boardWidth;
   int score;
@@ -40,8 +44,8 @@ class pong{
   void setPaddlePos(int x, int y);
   void setPaddleDimensions(int h , int w);
 
-  void update();
-  void update(int paddleDirection, int paddleY);
+  void update(double delTime);
+  void update(int paddleDirection, int paddleY, double delTime);
 
   double distance();
 

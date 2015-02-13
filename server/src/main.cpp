@@ -69,33 +69,28 @@ void* GameLoop(void* arg) {
       if (gameObjectsSet == true)
 	{
 	  //  cout << "here" << endl;
-	  pongGame->update();
+	  pongGame->update(1/60.0);
 
-	  ostringstream json;
-	  // {"phase":"ball_update", "ball_position":["x", "y"]}
-	  json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-	  json << pongGame->ballx << ", " << pongGame->bally << "]}";
-	  
-	  vector<int> clientIDs = server.getClientIDs();
-	  
+	    ostringstream json;
+        json << "{\"phase\":\"ball_update\",\"ball_position\":[";
+        json << (int)pongGame->ballx << ", " << (int)pongGame->bally << "]}";
+        vector<int> clientIDs = server.getClientIDs();
+        for (int i = 0; i < clientIDs.size(); i++){
+            server.wsSend(clientIDs[i], json.str());
+        }
+
 	  // Only send score updates sometimes
-	  if(scoreUpdateCounter == 10){
+	  if(scoreUpdateCounter % 10 == 0){
 	    scoreUpdateCounter = 0;
 	    ostringstream jsonScoring;
 	    jsonScoring << "{\"phase\":\"score_update\",";
 	    jsonScoring << "\"new_score\":\"" << pongGame->score << "\", \"num_tries\":\"" << pongGame->totalTries << "\"}";
 	    for (int i = 0; i < clientIDs.size(); i++){
-	      server.wsSend(clientIDs[i], json.str());
 	      server.wsSend(clientIDs[i], jsonScoring.str());
 	    }
-	 
+
 	  }
-	  else{
-	    scoreUpdateCounter++;
-	    for (int i = 0; i < clientIDs.size(); i++){
-	      server.wsSend(clientIDs[i], json.str());
-	    }
-	  }
+	  scoreUpdateCounter++;
 	  usleep(1000000/60);
 	}
     }
