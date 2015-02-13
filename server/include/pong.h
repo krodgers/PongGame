@@ -1,3 +1,11 @@
+/**
+   Kevin Malby UCID: 36928917
+   Kathryn Rodgers UCID: 39483825
+
+
+
+**/
+
 #ifndef __PONG_H__
 #define __PONG_H__
 

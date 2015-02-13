@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -39,7 +40,6 @@ void* GameLoop(void*);
 int main(int argc, char *argv[]){
   int port;
   gameObjectsSet = false;
-  pongGame = new pong();
 
   //setPongGame(*pongGame);
 
@@ -112,6 +112,7 @@ void Server(int port) {
 }
 
 void openHandler(int clientID){
+  pongGame = new pong();
 
   string json = "{\"phase\":\"initialization\"}";
   server.wsSend(clientID, json);
@@ -119,7 +120,8 @@ void openHandler(int clientID){
 
 /* called when a client disconnects */
 void closeHandler(int clientID){
-
+  
+  printf("Client %d disconnected\n", clientID);
 }
 
 void checkPartnerPresent(int clientID) {
@@ -239,7 +241,10 @@ void messageHandler(int clientID, string message){
       json << x << ", " << y << "]}";
 
       server.wsSend(clientID, json.str());*/
-  } else {
-
+  } else if(phaseString.compare("disconnect") == 0){
+    gameObjectsSet = false;
+    delete pongGame;
+  }else{
+  
   }
 }
