@@ -708,7 +708,7 @@ void webSocket::startServer(int port){
                 if (FD_ISSET(i, &read_fds)){
                     if (i == listenfd){
                         vector<int> currentIDs = getClientIDs();
-                        if (currentIDs.size() <= 0)
+                        if (currentIDs.size() <= 1)
                         {
                             socklen_t addrlen = sizeof(cli_addr);
                             int newfd = accept(listenfd, (struct sockaddr*)&cli_addr, &addrlen);

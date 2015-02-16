@@ -1,3 +1,8 @@
+/**
+   Kevin Malby UCID: 36928917
+   Kathryn Rodgers UCID: 39483825
+**/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -71,13 +76,13 @@ void* GameLoop(void* arg) {
 	  //  cout << "here" << endl;
 	  pongGame->update(1/60.0);
 
-	    ostringstream json;
-        json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-        json << (int)pongGame->ballx << ", " << (int)pongGame->bally << "]}";
-        vector<int> clientIDs = server.getClientIDs();
-        for (int i = 0; i < clientIDs.size(); i++){
+	  ostringstream json;
+	  json << "{\"phase\":\"ball_update\",\"ball_position\":[";
+	  json << (int)pongGame->ballx << ", " << (int)pongGame->bally << "]}";
+	  vector<int> clientIDs = server.getClientIDs();
+	  for (int i = 0; i < clientIDs.size(); i++){
             server.wsSend(clientIDs[i], json.str());
-        }
+	  }
 
 	  // Only send score updates sometimes
 	  if(scoreUpdateCounter % 10 == 0){
@@ -194,26 +199,66 @@ void messageHandler(int clientID, string message){
     checkPartnerPresent(clientID);
 
   } else if (phaseString.compare("ready_to_start") == 0) {
-    // todo, figure out what to do when we have two clients
-    // perhaps create a while loop that waits until another
-    // client has connected or something
+    cout << "Client " << clientID << " ready_to_start" << endl;
+    // todo, figure out what to do when we have two clients perhaps
+    // create a while loop that waits until another client has
+    // connected or something
 
-    // for now, just send start signal to single client
+    // send request for player's information
+    server.wsSend(clientID, "{\"phase\":\"send_info\"");
+    gameObjectsSet = true; // TODO:: clients need to use same object
     const Json::Value ballPosJson = root["ball_position"];
     vector<int> ballPos(ballPosJson.size());
-
+      
     for (int i = 0; i < ballPosJson.size(); i++) {
       ballPos[i] = ballPosJson[i].asInt();
     }
-
-    if (ballPos[0] != pongGame->ballx || ballPos[1] != pongGame->bally)
-      {
-	// todo, do something to remedy situation where ball
-	// position is not correct
-      } else {
-      server.wsSend(clientID, "{\"phase\":\"start\"}");
-      gameObjectsSet = true;
+	
+    if (ballPos[0] != pongGame->ballx || ballPos[1] != pongGame->bally){
+      // todo, do something to remedy situation where ball
+      // position is not correct
+    } else {
     }
+
+
+      
+   
+  } else if (phaseString.compare("exchange_info")){
+    cout << "Client " << clientID << "exchange_info" << endl;
+
+    // check for presence of another player
+    // assuming that only 2 clients are going to be allowed to connect
+    vector<int> clientIDs = server.getClientIDs();
+    int partnerID = -1;
+    for (int i = 0; i < clientIDs.size(); i++){
+      if (clientIDs[i] != clientID)
+	partnerID = clientIDs[i];
+    }
+    cout << "Client " << clientID << "has partner " << partnerID <<  endl;
+
+      
+    if(partnerID != -1 ){
+      const Json::Value playerName = root["name"];
+      ostringstream os;
+      os << "{\"phase\":\"set_opponent\",\"name\":\"" << playerName <<  "\" }";
+      server.wsSend(partnerID, os.str());
+
+
+
+      server.wsSend(clientID,"{\"phase\":\"start\"}");
+      cout << "Client " << clientID << "told to start" << endl;
+
+    } else {
+      // send wait signal
+      // could handle this in a couple different ways:
+      // 1) have client ping back in a few seconds
+      // 2) have server ping back ready client when another client connects
+      server.wsSend(clientID, "{\"phase\":\"wait\"");
+      cout << "Client " << clientID << "told to wait" << endl;
+    
+    }
+      
+      
   } else if (phaseString.compare("paddle_update") == 0) {
     int paddleDirection = root["paddle_direction"].asInt();
     const Json::Value paddlePosJson = root["paddle_position"];

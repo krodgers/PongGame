@@ -1,3 +1,9 @@
+
+/**
+   Kevin Malby UCID: 36928917
+   Kathryn Rodgers UCID: 39483825
+**/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
