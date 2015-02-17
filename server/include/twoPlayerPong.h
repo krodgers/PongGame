@@ -49,6 +49,7 @@ class pong{
   void setPaddleDimensions(int h , int w);
 
   void setPlayerNames(std::string playerOne, std::string playerTwo);
+  void setPlayerName(std::string player);
   std::string getPlayerName(int whichPlayer); // player 1 or player 2
   int getPlayerNumber(std::string player); // returns player 1 or player 2
 

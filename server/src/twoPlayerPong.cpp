@@ -30,7 +30,7 @@ pong::pong(int screenHeight, int screenWidth){
 pong::pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddle1StartX, int paddle1StartY, int paddle2StartX, int paddle2StartY){
 
   init();
-  
+
   boardHeight = screenHeight;
   boardWidth = screenWidth;
 
@@ -84,7 +84,7 @@ void pong::setPaddleDirection(std::string player, int direction) {
 }
 
 void  pong::setPaddlePos(std::string player, int x, int y){
-  
+
     paddlex[playerIDtoIndex(player)] = x;
     paddley[playerIDtoIndex(player)] = y;
 
@@ -100,6 +100,13 @@ void pong::setPlayerNames(std::string playerOne, std::string playerTwo) {
   playerID[1] = playerTwo;
 }
 
+void pong::setPlayerName(std::string player) {
+    if (playerID[0].compare("A") == 0)
+        playerID[0] = player;
+    else
+        playerID[1] = player;
+}
+
 
 std::string pong::getPlayerName(int whichPlayer){
   return playerID[whichPlayer-1];
@@ -109,6 +116,13 @@ int pong::getPlayerNumber(std::string player){
   return playerIDtoIndex(player) + 1;
 }
 
+int pong::getScore(std::string player) {
+    return score[getPlayerNumber(player)];
+}
+
+int pong::getTotalTries(std::string player) {
+    return totalTries[getPlayerNumber(player)];
+}
 
 // paddleDirection: 1/-1 for up/down
 // paddleX assumed to be constant
@@ -119,7 +133,7 @@ void pong::update( double delTime) {
 
 
   // Score for Left Player
-  
+
   bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_ONE] + paddleWidth; // left wall;
   if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
     // close enough; counts as hit
@@ -169,7 +183,7 @@ void pong::update( double delTime) {
     return;
   }
 
- 
+
   if(ballx-ballradius < 0 ){
     // went through left wall
     xspeed  = -xspeed;
@@ -214,8 +228,8 @@ void  pong::reset(){
   paddlex[PLAYER_ONE] = paddlex[PLAYER_TWO] = 0;
   paddley[PLAYER_ONE] = paddley[PLAYER_TWO]  = bally;
   paddleDirection[PLAYER_ONE] = paddleDirection[PLAYER_TWO] = 1;
-  
-  
+
+
 }
 
 int pong::playerIDtoIndex(std::string id){
@@ -223,7 +237,7 @@ int pong::playerIDtoIndex(std::string id){
     return PLAYER_ONE;
   if(id.compare(playerID[1]) == 0)
     return PLAYER_TWO;
-  
+
   printf("WARNING: Unknown player %s\n", id.c_str());
   return PLAYER_ONE; // default to player one
 }
