@@ -27,7 +27,7 @@ class pong{
   std::string playerID[2]; // maps players' names to playerOne/playerTwo
 
   void init();
-  int playerIDtoIndex(int);
+  int playerIDtoIndex(std::string);
  public:
   double ballx, bally;
   int ballradius;
@@ -49,8 +49,8 @@ class pong{
   void setPaddleDimensions(int h , int w);
 
   void setPlayerNames(std::string playerOne, std::string playerTwo);
-  void getPlayerName(int whichPlayer);
-  void getPlayerNumber(std::string player);
+  std::string getPlayerName(int whichPlayer); // player 1 or player 2
+  int getPlayerNumber(std::string player); // returns player 1 or player 2
 
   void getScore(std::string playerName);
   void getTotalTries(std::string playerName);
