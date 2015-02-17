@@ -14,7 +14,7 @@
 #include <json/value.h>
 #include <json/writer.h>
 #include <json/json.h>
-#include "pong.h"
+#include "twoPlayerPong.h"
 #include <cstdlib>
 #ifdef __linux__
 #include <pthread.h>
@@ -93,11 +93,16 @@ void* GameLoop(void* arg) {
 	  if(scoreUpdateCounter % 10 == 0){
 
 	    scoreUpdateCounter = 0;
-	    ostringstream jsonScoring;
-	    jsonScoring << "{\"phase\":\"score_update\",";
-	    jsonScoring << "\"new_score\":\"" << pongGame->score << "\", \"num_tries\":\"" << pongGame->totalTries << "\"}";
+
+	    Json::FastWriter writer;
+        Json::Value jsonToSend;
 	    for (int i = 0; i < clientIDs.size(); i++){
-	      server.wsSend(clientIDs[i], jsonScoring.str());
+	        jsonToSend.clear();
+	        jsonToSend["phase"] = "score_update";
+	        jsonToSend["new_score"] = pongGame->getScore(pongGame->getPlayerName(i));
+	        jsonToSend["num_tries"] = pongGame->getTotalTries(pongGame->getPlayerName(i));
+
+	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 	      //////// DELETE ME ///////////
 	      //   printf("Game Loop: Updating score for client %d\n", i);
 	      ///////////////////////////
@@ -178,6 +183,7 @@ void messageHandler(int clientID, string message){
 				    root,
 				    false);
   string phaseString = root["phase"].asString();
+  string playerName = root["name"].asString();
 
   if (phaseString.compare("initial_dimensions") == 0) {
     //////// DELETE ME ///////////
@@ -204,9 +210,12 @@ void messageHandler(int clientID, string message){
       cout << paddleDims[i] << endl;
     }
 
+
+    pongGame->setPlayerName(playerName);
+
     pongGame->boardWidth = mapDims[2];
     pongGame->boardHeight = mapDims[3];
-    pongGame->setPaddlePos(paddleDims[0], paddleDims[1]);
+    pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);
     pongGame->setPaddleDimensions(paddleDims[2], paddleDims[3]);
     pongGame->setBallPos(mapDims[2]/2, mapDims[3]/2);
     pongGame->setBallRadius(10);
@@ -254,19 +263,28 @@ void messageHandler(int clientID, string message){
 
 
     if(partnerID != -1 ){
-      const Json::Value playerName = root["name"].asString();
+      pongGame->setPlayerNames(pongGame->getPlayerName(partnerID), playerName);
 
-      Json::Value jsonToSend;
       Json::FastWriter writer;
+      Json::Value jsonToSend;
+
+      // Send the opponent name to the first player to connect
       jsonToSend["phase"] = "set_opponent";
       jsonToSend["name"] = playerName;
-      string tmp = writer.write(jsonToSend);
-      tmp = tmp.substr(0, tmp.length() - 1);
+      server.wsSend(partnerID, writer.write(jsonToSend));
+
+      // Send the opponent name to the second player to connect
+      jsonToSend.clear();
+      jsonToSend["phase"] = "set_opponent";
+      jsonToSend["name"] = pongGame->getPlayerName(partnerID);
+      server.wsSend(clientID, writer.write(jsonToSend));
+
+
 
 //      ostringstream os;
 //      os << "{\"phase\":\"set_opponent\",\"name\":" << playerName <<  "\" }";
 //      string tmp = os.str();
-      server.wsSend(partnerID, writer.write(jsonToSend));
+
 
 
 
@@ -279,6 +297,9 @@ void messageHandler(int clientID, string message){
       // could handle this in a couple different ways:
       // 1) have client ping back in a few seconds
       // 2) have server ping back ready client when another client connects
+
+
+
       server.wsSend(clientID, "{\"phase\":\"wait\"}");
       printf("Client %d told to wait\n", clientID);
 
@@ -299,8 +320,8 @@ void messageHandler(int clientID, string message){
     ** in the physics engine to update paddle location
     */
 
-    pongGame->setPaddleDirection(paddleDirection);
-    pongGame->setPaddlePos(paddlePos[0], paddlePos[1]);
+    pongGame->setPaddleDirection(playerName, paddleDirection);
+    pongGame->setPaddlePos(playerName, paddlePos[0], paddlePos[1]);
     /*cout << "Paddle x: " << paddlePos[0] << ", Paddle y: " << paddlePos[1] << endl;
       int x = distribution(generator);
       int y = distribution(generator);*/
