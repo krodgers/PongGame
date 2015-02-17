@@ -2,8 +2,6 @@
    Kevin Malby UCID: 36928917
    Kathryn Rodgers UCID: 39483825
 
-
-
 **/
 
 #ifndef __TWO_PONG_H__
@@ -28,6 +26,7 @@ class pong{
 
   void init();
   int playerIDtoIndex(std::string);
+  
  public:
   double ballx, bally;
   int ballradius;
@@ -43,6 +42,7 @@ class pong{
   void setBallPos(int x, int y);
   void setBallRadius(int);
   void setBallSpeed(double speedX, double speedY);
+  void getBallPosition(std::string player, int& outX, int& outY);
 
   void setPaddleDirection(std::string player, int direction);
   void setPaddlePos(std::string player, int x, int y);

@@ -79,6 +79,22 @@ void pong::setBallSpeed(double speedX, double speedY){
   yspeed = speedY;
 }
 
+// Returns coordinates corrected for both players being on the left
+// i.e. when the ball is really on the right and player 2 wants coordinates,
+//                  will give coordinates as if that player 2 is on the left
+void pong::getBallPosition(std::string player, int& outX, int& outY){
+  if(PLAYER_ONE == playerIDtoIndex(player)){
+      outX = ballx;
+      outY = bally;
+    } else if (PLAYER_TWO == playerIDtoIndex(player)){
+      outX = boardWidth - ballx;
+      outY = bally;
+  } else{
+    printf("wARNING: getting ball position for non existant player %s\n", player.c_str());
+  }
+      
+}
+
 void pong::setPaddleDirection(std::string player, int direction) {
   paddleDirection[playerIDtoIndex(player)] = direction;
 }
