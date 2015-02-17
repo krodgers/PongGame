@@ -134,8 +134,8 @@ void pong::update( double delTime) {
 
   // Score for Right Player
   // goes through left wall
-  bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_TWO] + paddleWidth; // left wall;
-  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
+  bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_ONE] + paddleWidth; // left wall;
+  if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
     // close enough; counts as hit
     score[PLAYER_TWO] ++;
     totalTries[PLAYER_ONE] ++;
@@ -160,8 +160,8 @@ void pong::update( double delTime) {
 
    // Score for Left Player
   // goes through right wall
-  closeX = (ballx + ballradius)  >= paddlex[PLAYER_ONE]; // right wall
-  if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
+  closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO]; // right wall
+  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
     // close enough; counts as hit
     score[PLAYER_ONE] ++;
     totalTries[PLAYER_TWO] ++;
