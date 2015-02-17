@@ -9,6 +9,9 @@ all: pong.o sha1.o websocket.o base64.o
 	g++ -g  -I../include -D__linux__ pong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
 
 
+pong: twoPlayerPong.cpp
+	g++ -g -I../include -D__linux__  -mno-cygwin twoPlayerPong.cpp -o pong
+
 tests: pong.cpp testNewPHysics.cpp
 	g++ -g -Wall  -I../include pong.cpp testNewPHysics.cpp -o tests
 

@@ -17,8 +17,8 @@
 
 
 pong::pong(){
- xspeed = X_VELOCITY;
- yspeed = rand() % Y_VELOCITY;
+  xspeed = X_VELOCITY;
+  yspeed = rand() % Y_VELOCITY;
   boardHeight = 500;
   boardWidth = 500;
   ballx = 250;
