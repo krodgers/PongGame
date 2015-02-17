@@ -117,11 +117,11 @@ int pong::getPlayerNumber(std::string player){
 }
 
 int pong::getScore(std::string player) {
-    return score[getPlayerNumber(player)];
+    return score[playerIDtoIndex(player)];
 }
 
 int pong::getTotalTries(std::string player) {
-    return totalTries[getPlayerNumber(player)];
+    return totalTries[playerIDtoIndex(player)];
 }
 
 // paddleDirection: 1/-1 for up/down
@@ -132,17 +132,17 @@ void pong::update( double delTime) {
   bally += (yspeed*delTime);
 
 
-  // Score for Left Player
-
-  bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_ONE] + paddleWidth; // left wall;
-  if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
+  // Score for Right Player
+  // goes through left wall
+  bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_TWO] + paddleWidth; // left wall;
+  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
     // close enough; counts as hit
-    score[PLAYER_ONE] ++;
+    score[PLAYER_TWO] ++;
     totalTries[PLAYER_ONE] ++;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
-    switch(paddleDirection[PLAYER_ONE]){
+    switch(paddleDirection[PLAYER_TWO]){
     case 1:
       yspeed += Y_ADJUST;
       break;
@@ -158,17 +158,17 @@ void pong::update( double delTime) {
   }
 
 
-   // Score for Right Player
-
-  closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO]; // right wall
-  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
+   // Score for Left Player
+  // goes through right wall
+  closeX = (ballx + ballradius)  >= paddlex[PLAYER_ONE]; // right wall
+  if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
     // close enough; counts as hit
-    score[PLAYER_TWO] ++;
+    score[PLAYER_ONE] ++;
     totalTries[PLAYER_TWO] ++;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
-    switch(paddleDirection[PLAYER_TWO]){
+    switch(paddleDirection[PLAYER_ONE]){
     case 1:
       yspeed += Y_ADJUST;
       break;
@@ -232,6 +232,8 @@ void  pong::reset(){
 
 }
 
+// Returns the index into all of the array variables
+// corresponding to the player number of the string id
 int pong::playerIDtoIndex(std::string id){
   if(id.compare(playerID[0]) == 0)
     return PLAYER_ONE;
