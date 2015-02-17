@@ -52,8 +52,8 @@ class pong{
   std::string getPlayerName(int whichPlayer); // player 1 or player 2
   int getPlayerNumber(std::string player); // returns player 1 or player 2
 
-  void getScore(std::string playerName);
-  void getTotalTries(std::string playerName);
+  int  getScore(std::string playerName);
+  int getTotalTries(std::string playerName);
   
   void update(double delTime);
 

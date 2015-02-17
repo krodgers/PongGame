@@ -13,7 +13,7 @@ pong: twoPlayerPong.cpp
 	g++ -g -I../include -D__linux__  -mno-cygwin twoPlayerPong.cpp -o pong
 
 tests: twoPlayerPong.cpp testTwoPlayer.cpp
-	g++ -g -Wall  -I../include twoPlayerPong.cpp testTwoPlayer.cpp -o tests
+	g++ -g -Wall -I../include twoPlayerPong.cpp testTwoPlayer.cpp -o tests
 
 
 
