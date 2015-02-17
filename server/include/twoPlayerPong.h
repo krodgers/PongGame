@@ -24,8 +24,10 @@ class pong{
   int paddleDirection[];
   int score[2]; // player zero is on Left, player one is on Right
   int totalTries[2]; // player zero is on Left, player one is on Right
+  std::string playerID[2]; // maps players' names to playerOne/playerTwo
 
-
+  void init();
+  int playerIDtoIndex(int);
  public:
   double ballx, bally;
   int ballradius;
@@ -42,12 +44,16 @@ class pong{
   void setBallRadius(int);
   void setBallSpeed(double speedX, double speedY);
 
-  void setPaddleDirection(int player, int direction);
-  void setPaddlePos(int player, int x, int y);
+  void setPaddleDirection(std::string player, int direction);
+  void setPaddlePos(std::string player, int x, int y);
   void setPaddleDimensions(int h , int w);
 
-  void getScore(int player);
-  void getTotalTries(int player);
+  void setPlayerNames(std::string playerOne, std::string playerTwo);
+  void getPlayerName(int whichPlayer);
+  void getPlayerNumber(std::string player);
+
+  void getScore(std::string playerName);
+  void getTotalTries(std::string playerName);
   
   void update(double delTime);
 
