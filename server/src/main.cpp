@@ -131,7 +131,7 @@ void* GameLoop(void* arg) {
 	      ///////////////////////////
 		
 	    }
-	    
+
 	  }
 	  scoreUpdateCounter++;
 	  usleep(1000000/60);
