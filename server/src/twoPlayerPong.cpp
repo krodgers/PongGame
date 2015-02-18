@@ -54,8 +54,8 @@ void pong::init(){
   paddleDirection[PLAYER_ONE] = paddleDirection[PLAYER_TWO] = 1;
   score[PLAYER_ONE] = score[PLAYER_TWO] = 0;
   totalTries[PLAYER_ONE] = totalTries[PLAYER_TWO] = 0;
-  playerID[0] = "A";
-  playerID[1] = "B";
+  playerName[0] = "!";
+  playerName[1] = "*";
   ballx = 250;
   bally = 250;
   ballradius = 5;
@@ -83,10 +83,10 @@ void pong::setBallSpeed(double speedX, double speedY){
 // i.e. when the ball is really on the right and player 2 wants coordinates,
 //                  will give coordinates as if that player 2 is on the left
 void pong::getBallPosition(std::string player, int& outX, int& outY){
-  if(PLAYER_ONE == playerIDtoIndex(player)){
+  if(PLAYER_ONE == playerNametoIndex(player)){
       outX = ballx;
       outY = bally;
-    } else if (PLAYER_TWO == playerIDtoIndex(player)){
+    } else if (PLAYER_TWO == playerNametoIndex(player)){
       outX = boardWidth - ballx;
       outY = bally;
   } else{
@@ -96,13 +96,13 @@ void pong::getBallPosition(std::string player, int& outX, int& outY){
 }
 
 void pong::setPaddleDirection(std::string player, int direction) {
-  paddleDirection[playerIDtoIndex(player)] = direction;
+  paddleDirection[playerNametoIndex(player)] = direction;
 }
 
 void  pong::setPaddlePos(std::string player, int x, int y){
 
-    paddlex[playerIDtoIndex(player)] = x;
-    paddley[playerIDtoIndex(player)] = y;
+    paddlex[playerNametoIndex(player)] = x;
+    paddley[playerNametoIndex(player)] = y;
 
 }
 
@@ -110,8 +110,8 @@ std::vector<int> pong::getPaddlePos(std::string player) {
 
     std::vector<int> pos (2);
 
-    pos[0] = paddlex[playerIDtoIndex(player)];
-    pos[1] = paddley[playerIDtoIndex(player)];
+    pos[0] = paddlex[playerNametoIndex(player)];
+    pos[1] = paddley[playerNametoIndex(player)];
     return pos;
 }
 
@@ -122,33 +122,82 @@ void pong::setPaddleDimensions(int h, int w){
 
 
 void pong::setPlayerNames(std::string playerOne, std::string playerTwo) {
-  playerID[0] = playerOne;
-  playerID[1] = playerTwo;
+  playerName[0] = playerOne;
+  playerName[1] = playerTwo;
 }
+
+// map an integer ID to a player
+// whichPlayer: 0 or 1
+// playerID:  the id to map to this player
+void pong::setPlayerID(int whichPlayer, int playerID){
+  if(whichPlayer == 0 || whichPlayer == 1){
+    playerIDS[whichPlayer] = playerID;
+  } else{
+    printf("WARNING: setting an ID for invalid player %d\n", whichPlayer);
+  }
+  
+}
+
 
 void pong::setPlayerName(std::string player) {
-    if (playerID[0].compare("A") == 0)
-        playerID[0] = player;
+    if (playerName[0].compare("!") == 0)
+        playerName[0] = player;
     else
-        playerID[1] = player;
+        playerName[1] = player;
 }
 
 
-std::string pong::getPlayerName(int whichPlayer){
-  return playerID[whichPlayer];
+// returns the name of the player mapped to given ID
+std::string pong::getPlayerName(int playerID){
+  return playerName[playerIDtoIndex(playerID)];
 }
 
 int pong::getPlayerNumber(std::string player){
-  return playerIDtoIndex(player) + 1;
+  return playerNametoIndex(player) + 1;
 }
 
+
+int pong::getPlayerID(std::string player){
+  return playerIDS[playerNametoIndex(player)];
+}
+
+// returns player's opponent's ID
+int pong::getOtherPlayersID(std::string player){
+  return playerNametoIndex(player) == PLAYER_ONE ? playerIDS[PLAYER_TWO] : playerIDS[PLAYER_ONE];
+}
+
+// returns player's opponent's ID -- the ID assigned to the player
+int pong::getOtherPlayersID(int playerID){
+  return playerIDtoIndex(playerID) == PLAYER_ONE ? playerIDS[PLAYER_TWO] : playerIDS[PLAYER_ONE];
+}
+
+std::string pong::getOtherPlayersName(std::string player){
+  return playerNametoIndex(player) == PLAYER_ONE ? playerName[PLAYER_TWO] : playerName[PLAYER_ONE];
+
+}
+
+// returns playerID's opponent's name
+std::string pong::getOtherPlayersName(int playerID){
+  return playerIDtoIndex(playerID) == PLAYER_ONE ? playerName[PLAYER_TWO] : playerName[PLAYER_ONE];
+}
+
+
+
 int pong::getScore(std::string player) {
-    return score[playerIDtoIndex(player)];
+    return score[playerNametoIndex(player)];
+}
+int pong::getScore(int playerID) {
+    return score[playerIDtoIndex(playerID)];
 }
 
 int pong::getTotalTries(std::string player) {
-    return totalTries[playerIDtoIndex(player)];
+    return totalTries[playerNametoIndex(player)];
 }
+
+int pong::getTotalTries(int playerID) {
+    return totalTries[playerIDtoIndex(playerID)];
+}
+
 
 // paddleDirection: 1/-1 for up/down
 // paddleX assumed to be constant
@@ -260,14 +309,25 @@ void  pong::reset(){
 
 // Returns the index into all of the array variables
 // corresponding to the player number of the string id
-int pong::playerIDtoIndex(std::string id){
-  if(id.compare(playerID[0]) == 0)
+int pong::playerNametoIndex(std::string id){
+  if(id.compare(playerName[0]) == 0)
     return PLAYER_ONE;
-  if(id.compare(playerID[1]) == 0)
+  if(id.compare(playerName[1]) == 0)
     return PLAYER_TWO;
 
   printf("WARNING: Unknown player %s\n", id.c_str());
   return PLAYER_ONE; // default to player one
 }
 
+// Returns the index into all of the array variables
+// corresponding to the player number of the string id
+int pong::playerIDtoIndex(int id){
+  if(id == playerIDS[0])
+    return PLAYER_ONE;
+  if(id == playerIDS[1])
+    return PLAYER_TWO;
+
+  printf("WARNING: Unknown player ID %d\n", id);
+  return PLAYER_ONE; // default to player one
+}
 

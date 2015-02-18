@@ -4,8 +4,8 @@
 
 **/
 
-#ifndef __TWO_PONG_H__
-#define __TWO_PONG_H__
+#ifndef __PONG_H__
+#define __PONG_H__
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -23,10 +23,11 @@ class pong{
   int paddleDirection[];
   int score[2]; // player zero is on Left, player one is on Right
   int totalTries[2]; // player zero is on Left, player one is on Right
-  std::string playerID[2]; // maps players' names to playerOne/playerTwo
-
+  std::string playerName[2]; // maps players' names to playerOne/playerTwo
+  int playerIDS[2]; // maps player to an ID (like a clientID)
   void init();
-  int playerIDtoIndex(std::string);
+  int playerNametoIndex(std::string);
+  int playerIDtoIndex(int);
 
  public:
   double ballx, bally;
@@ -48,16 +49,24 @@ class pong{
   void setPaddleDirection(std::string player, int direction);
   void setPaddlePos(std::string player, int x, int y);
   void setPaddleDimensions(int h , int w);
-
-  void setPlayerNames(std::string playerOne, std::string playerTwo);
-  void setPlayerName(std::string player);
-  std::string getPlayerName(int whichPlayer); // player 0  or player 1
-  int getPlayerNumber(std::string player); // returns player 1 or player 2
   std::vector<int> getPaddlePos(std::string player);
 
-  int getScore(std::string playerName);
-  int getTotalTries(std::string playerName);
+  void setPlayerNames(std::string playerOne, std::string playerTwo);
+  void setPlayerID(int whichPlayer, int playerID); // whichPlayer: 0 or 1, maps to playerID
+  void setPlayerName(std::string player);
+  //  std::string getPlayerName(int whichPlayer); // player 0  or player 1
+  std::string getPlayerName(int playerID);
+  int getPlayerNumber(std::string player); // returns player 1 or player 2
+  int getPlayerID(std::string player);
+  int getOtherPlayersID(std::string player);
+  int getOtherPlayersID(int playerID);
+  std::string getOtherPlayersName(std::string player);
+  std::string getOtherPlayersName(int);
 
+  int getScore(std::string playerName);
+  int getScore(int);
+  int getTotalTries(std::string playerName);
+  int getTotalTries(int);
   void update(double delTime);
 
   double distance();
