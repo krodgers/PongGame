@@ -97,26 +97,32 @@ void* GameLoop(void* arg) {
 	    Json::FastWriter writer;
 	    Json::Value jsonToSend;
 	    for (int i = 0; i < clientIDs.size(); i++){
-	        jsonToSend.clear();
-		jsonToSend["phase"] = "score_update";
-	        jsonToSend["new_score"] = pongGame->getScore(pongGame->getPlayerName(i));
-	        jsonToSend["num_tries"] = pongGame->getTotalTries(pongGame->getPlayerName(i));
-	        server.wsSend(clientIDs[i], writer.write(jsonToSend));
-
-	        jsonToSend.clear();
-	        jsonToSend["phase"] = "opponent_paddle_update";
-	        vector<int> opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
-	        ostringstream oppPaddle;
-	        oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
-	        jsonToSend["opponent_paddle"] = oppPaddle.str();
-            server.wsSend(clientIDs[i], writer.write(jsonToSend));
-
-	      //////// DELETE ME ///////////
-	      //   printf("Game Loop: Updating score for client %d\n", i);
-	      ///////////////////////////
-
+	      int myScore = pongGame->getScore(pongGame->getPlayerName(i));
+	      int myTries = pongGame->getTotalTries(pongGame->getPlayerName(i));
+	      int hisScore = pongGame->getScore(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
+	      int hisTries = pongGame->getTotalTries(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
+	      // Send scores
+	      // my scores
+	      jsonToSend.clear();
+	      jsonToSend["phase"] = "score_update";
+	      jsonToSend["new_score"] = myScore;
+	      jsonToSend["num_tries"] = myTries;
+	      jsonToSend["opp_new_score"] = hisScore;
+	      jsonToSend["opp_num_tries"] = hisTries;
+	      
+	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      
+	      // Send opponent's paddle position
+	      jsonToSend.clear();
+	      jsonToSend["phase"] = "opponent_paddle_update";
+	      vector<int> opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
+	      ostringstream oppPaddle;
+	      oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
+	      jsonToSend["opponent_paddle"] = oppPaddle.str();
+	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      
 	    }
-
+	    
 	  }
 	  scoreUpdateCounter++;
 	  usleep(1000000/60);
@@ -169,7 +175,7 @@ void closeHandler(int clientID){
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
 
-  cout << message << endl;
+  //cout << message << endl;
 
   // Let's parse it
   Json::Value root;
@@ -296,21 +302,14 @@ void messageHandler(int clientID, string message){
 
     } else {
       // send wait signal
-      // could handle this in a couple different ways:
-      // 1) have client ping back in a few seconds
-      // 2) have server ping back ready client when another client connects
-
-
-
       server.wsSend(clientID, "{\"phase\":\"wait\"}");
       printf("Client %d told to wait\n", clientID);
-
     }
 
 
   } else if (phaseString.compare("paddle_update") == 0) {
     //////// DELETE ME ///////////
-    printf("Phase String: paddle_update\n");
+    //    printf("Phase String: paddle_update\n");
     ///////////////////////////
     int paddleDirection = root["paddle_direction"].asInt();
     const Json::Value paddlePosJson = root["paddle_position"];
