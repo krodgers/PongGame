@@ -97,6 +97,7 @@ void* GameLoop(void* arg) {
 	    Json::FastWriter writer;
 	    Json::Value jsonToSend;
 	    for (int i = 0; i < clientIDs.size(); i++){
+<<<<<<< dd33e5d22444b19218be7a8fa0b8527df9ba8602
 	      int myScore = pongGame->getScore(pongGame->getPlayerName(i));
 	      int myTries = pongGame->getTotalTries(pongGame->getPlayerName(i));
 	      int hisScore = pongGame->getScore(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
@@ -111,16 +112,36 @@ void* GameLoop(void* arg) {
 	      jsonToSend["opp_num_tries"] = hisTries;
 	      
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
-	      
-	      // Send opponent's paddle position
-	      jsonToSend.clear();
-	      jsonToSend["phase"] = "opponent_paddle_update";
-	      vector<int> opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
-	      ostringstream oppPaddle;
-	      oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
-	      jsonToSend["opponent_paddle"] = oppPaddle.str();
-	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
-	      
+
+	        jsonToSend.clear();
+            jsonToSend["phase"] = "score_update";
+	        jsonToSend["new_score"] = pongGame->getScore(pongGame->getPlayerName(i));
+	        jsonToSend["num_tries"] = pongGame->getTotalTries(pongGame->getPlayerName(i));
+	        server.wsSend(clientIDs[i], writer.write(jsonToSend));
+
+	        jsonToSend.clear();
+	        jsonToSend["phase"] = "opponent_paddle_update";
+	        vector<int> opponentPaddle;
+	        if (i == 0)
+                opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(1));
+            else
+                opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(0));
+	        ostringstream oppPaddle;
+	        oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
+	        jsonToSend["opponent_paddle"] = oppPaddle.str();
+            server.wsSend(clientIDs[i], writer.write(jsonToSend));
+
+            ostringstream out;
+            vector<int> paddleOne = pongGame->getPaddlePos(pongGame->getPlayerName(0));
+            vector<int> paddleTwo = pongGame->getPaddlePos(pongGame->getPlayerName(1));
+            out << "Player " << pongGame->getPlayerName(0) << "'s paddle position: " << "[" << paddleOne[0] << "," << paddleOne[1] << "]" << endl;
+            out << "Player " << pongGame->getPlayerName(1) << "'s paddle position: " << "[" << paddleTwo[0] << "," << paddleTwo[1] << "]" << endl;
+            cout << out.str();
+
+	      //////// DELETE ME ///////////
+	      //   printf("Game Loop: Updating score for client %d\n", i);
+	      ///////////////////////////
+
 	    }
 	    
 	  }
@@ -176,6 +197,7 @@ void closeHandler(int clientID){
 void messageHandler(int clientID, string message){
 
   //cout << message << endl;
+
 
   // Let's parse it
   Json::Value root;
@@ -321,6 +343,14 @@ void messageHandler(int clientID, string message){
     ** in the physics engine to update paddle location
     */
 
+    if (playerName.compare("abe") == 0 && paddlePos[0] == 0) {
+        cout << "suuuhhhhweeeeet" << endl;
+    }
+
+    if (playerName.compare("Kevin") == 0 && paddlePos[0] == 0) {
+        cout << "suuuhhhhweeeeet" << endl;
+    }
+
     pongGame->setPaddleDirection(playerName, paddleDirection);
     pongGame->setPaddlePos(playerName, paddlePos[0], paddlePos[1]);
     /*cout << "Paddle x: " << paddlePos[0] << ", Paddle y: " << paddlePos[1] << endl;
@@ -357,9 +387,9 @@ void messageHandler(int clientID, string message){
       ///////////////////////////
       gameObjectsSet = false;
       delete pongGame;
-      
+
     }
-  
+
   }else{
 
   }

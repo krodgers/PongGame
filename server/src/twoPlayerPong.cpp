@@ -142,13 +142,6 @@ int pong::getPlayerNumber(std::string player){
   return playerIDtoIndex(player) + 1;
 }
 
-int pong::getOpponentNum(int playerNum) {
-    if (playerNum == 0)
-        return 1;
-    else
-        return 0;
-}
-
 int pong::getScore(std::string player) {
     return score[playerIDtoIndex(player)];
 }
@@ -170,12 +163,11 @@ void pong::update( double delTime) {
   bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_ONE] + paddleWidth; // left wall;
   if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
     // close enough; counts as hit
-    score[PLAYER_TWO] ++;
     totalTries[PLAYER_ONE] ++;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
-    switch(paddleDirection[PLAYER_TWO]){
+    switch(paddleDirection[PLAYER_ONE]){
     case 1:
       yspeed += Y_ADJUST;
       break;
@@ -196,12 +188,11 @@ void pong::update( double delTime) {
   closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO]; // right wall
   if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
     // close enough; counts as hit
-    score[PLAYER_ONE] ++;
-    totalTries[PLAYER_TWO] ++;
+    totalTries[PLAYER_TWO]++;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
-    switch(paddleDirection[PLAYER_ONE]){
+    switch(paddleDirection[PLAYER_TWO]){
     case 1:
       yspeed += Y_ADJUST;
       break;
@@ -212,7 +203,7 @@ void pong::update( double delTime) {
         break;
 
     }
-    ballx = ballx + WALL_OFFSET + ballradius;
+    ballx = ballx - WALL_OFFSET - ballradius;
     return;
   }
 
@@ -221,12 +212,14 @@ void pong::update( double delTime) {
     // went through left wall
     xspeed  = -xspeed;
     reset();
+    score[PLAYER_TWO]++;
     totalTries[PLAYER_ONE]++;
     return;
   } else if( ballx+ballradius >= boardWidth){
     // ball hit right wall
     xspeed  = -xspeed;
     reset();
+    score[PLAYER_ONE]++;
     totalTries[PLAYER_TWO]++;
     return;
     // ballx = boardWidth - WALL_OFFSET - ballradius;
@@ -258,9 +251,9 @@ void  pong::reset(){
   yspeed = rand() % Y_VELOCITY;
   ballx = std::floor(boardWidth/2);
   bally = std::floor(boardHeight/2);
-  paddlex[PLAYER_ONE] = paddlex[PLAYER_TWO] = 0;
-  paddley[PLAYER_ONE] = paddley[PLAYER_TWO]  = bally;
-  paddleDirection[PLAYER_ONE] = paddleDirection[PLAYER_TWO] = 1;
+//  paddlex[PLAYER_ONE] = paddlex[PLAYER_TWO] = 0;
+//  paddley[PLAYER_ONE] = paddley[PLAYER_TWO]  = bally;
+//  paddleDirection[PLAYER_ONE] = paddleDirection[PLAYER_TWO] = 1;
 
 
 }
