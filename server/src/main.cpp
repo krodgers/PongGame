@@ -97,11 +97,10 @@ void* GameLoop(void* arg) {
 	    Json::FastWriter writer;
 	    Json::Value jsonToSend;
 	    for (int i = 0; i < clientIDs.size(); i++){
-<<<<<<< dd33e5d22444b19218be7a8fa0b8527df9ba8602
 	      int myScore = pongGame->getScore(pongGame->getPlayerName(i));
 	      int myTries = pongGame->getTotalTries(pongGame->getPlayerName(i));
-	      int hisScore = pongGame->getScore(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
-	      int hisTries = pongGame->getTotalTries(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
+	      int hisScore = pongGame->getScore(pongGame->getPlayerName(i==0?1:0));
+	      int hisTries = pongGame->getTotalTries(pongGame->getPlayerName(i==0?1:0));
 	      // Send scores
 	      // my scores
 	      jsonToSend.clear();
@@ -110,7 +109,7 @@ void* GameLoop(void* arg) {
 	      jsonToSend["num_tries"] = myTries;
 	      jsonToSend["opp_new_score"] = hisScore;
 	      jsonToSend["opp_num_tries"] = hisTries;
-	      
+
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 
 	        jsonToSend.clear();
@@ -143,7 +142,7 @@ void* GameLoop(void* arg) {
 	      ///////////////////////////
 
 	    }
-	    
+
 	  }
 	  scoreUpdateCounter++;
 	  usleep(1000000/60);
