@@ -95,10 +95,10 @@ void* GameLoop(void* arg) {
 	    scoreUpdateCounter = 0;
 
 	    Json::FastWriter writer;
-        Json::Value jsonToSend;
+	    Json::Value jsonToSend;
 	    for (int i = 0; i < clientIDs.size(); i++){
 	        jsonToSend.clear();
-	        jsonToSend["phase"] = "score_update";
+		jsonToSend["phase"] = "score_update";
 	        jsonToSend["new_score"] = pongGame->getScore(pongGame->getPlayerName(i));
 	        jsonToSend["num_tries"] = pongGame->getTotalTries(pongGame->getPlayerName(i));
 	        server.wsSend(clientIDs[i], writer.write(jsonToSend));
@@ -334,11 +334,33 @@ void messageHandler(int clientID, string message){
 
       server.wsSend(clientID, json.str());*/
   } else if(phaseString.compare("disconnect") == 0){
-    //////// DELETE ME ///////////
-    printf("Phase String: disconnect\n");
-    ///////////////////////////
-    gameObjectsSet = false;
-    delete pongGame;
+    // assuming that only 2 clients are going to be allowed to connect
+    // send message to partner telling him to disconnect
+    vector<int> clientIDs = server.getClientIDs();
+    int partnerID = -1;
+    for (int i = 0; i < clientIDs.size(); i++){
+      if (clientIDs[i] != clientID) {
+        partnerID = clientIDs[i];
+      }
+    }
+
+    Json::FastWriter writer;
+    Json::Value jsonToSend;
+    if(partnerID != -1 ){
+      // has partner
+      jsonToSend["phase"] = "disconnected";
+      server.wsSend(partnerID, writer.write(jsonToSend));
+
+    } else {
+      // has no partner
+      //////// DELETE ME ///////////
+      printf("Phase String: disconnect\n");
+      ///////////////////////////
+      gameObjectsSet = false;
+      delete pongGame;
+      
+    }
+  
   }else{
 
   }

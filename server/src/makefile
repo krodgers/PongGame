@@ -6,7 +6,7 @@
 #####################################
 
 all: twoPlayerPong.o sha1.o websocket.o base64.o 
-	g++ -g  -I../include -D__linux__ twoPlayerPong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
+	g++ -g -I../include -D__linux__ twoPlayerPong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
 
 onePlayer: pong.o sha1.o websocket.o base64.o 
 	g++ -g  -I../include -D__linux__ pong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
