@@ -350,8 +350,10 @@ bool webSocket::wsProcessClientMessage(int clientID, unsigned char opcode, strin
         wsRemoveClient(clientID);
     }
     else if (opcode == WS_OPCODE_TEXT || opcode == WS_OPCODE_BINARY){
-        if (callOnMessage != NULL)
+        if (callOnMessage != NULL) {
+            string tmp = data.substr(0, dataLength);
             callOnMessage(clientID, data.substr(0, dataLength));
+        }
     }
     else {
         // unknown opcode

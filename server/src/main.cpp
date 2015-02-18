@@ -101,8 +101,16 @@ void* GameLoop(void* arg) {
 	        jsonToSend["phase"] = "score_update";
 	        jsonToSend["new_score"] = pongGame->getScore(pongGame->getPlayerName(i));
 	        jsonToSend["num_tries"] = pongGame->getTotalTries(pongGame->getPlayerName(i));
+	        server.wsSend(clientIDs[i], writer.write(jsonToSend));
 
-	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	        jsonToSend.clear();
+	        jsonToSend["phase"] = "opponent_paddle_update";
+	        vector<int> opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(pongGame->getOpponentNum(i)));
+	        ostringstream oppPaddle;
+	        oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
+	        jsonToSend["opponent_paddle"] = oppPaddle.str();
+            server.wsSend(clientIDs[i], writer.write(jsonToSend));
+
 	      //////// DELETE ME ///////////
 	      //   printf("Game Loop: Updating score for client %d\n", i);
 	      ///////////////////////////
@@ -131,10 +139,25 @@ void openHandler(int clientID){
   printf("Open Handler: Client %d connecting\n", clientID);
   ///////////////////////////
 
-  pongGame = new pong();
+  vector<int> clientIDs = server.getClientIDs();
+    int partnerID = -1;
+    for (int i = 0; i < clientIDs.size(); i++){
+      if (clientIDs[i] != clientID) {
+        partnerID = clientIDs[i];
+      }
+    }
 
-  string json = "{\"phase\":\"initialization\"}";
-  server.wsSend(clientID, json);
+  if (partnerID == -1)
+    pongGame = new pong();
+
+
+  Json::FastWriter writer;
+  Json::Value jsonToSend;
+
+  // Send the opponent name to the first player to connect
+  jsonToSend["phase"] = "initialization";
+  jsonToSend["player_number"] = clientID;
+  server.wsSend(clientID, writer.write(jsonToSend));
 }
 
 /* called when a client disconnects */
@@ -143,38 +166,10 @@ void closeHandler(int clientID){
   printf("Client %d disconnected\n", clientID);
 }
 
-void checkPartnerPresent(int clientID) {
-  vector<int> clientIDs = server.getClientIDs();
-  int partner = -1;
-  for (int i = 0; i < clientIDs.size(); i++){
-    if (clientIDs[i] != clientID)
-      partner = clientIDs[i];
-  }
-
-
-    // todo, here we would handle the case where
-    // one person is connected and not the other
-    // which should wait may or may not wait until
-    // the other player is connected
-    // Since we don't have another player right now
-    // it will just send data back to client
-    //////// DELETE ME ///////////
-    printf("checkPartnerPresent: Has partner %d\n", partner);
-    ///////////////////////////
-
-    int ballRadius = pongGame->ballradius;
-
-    ostringstream json;
-    json << "{\"phase\":\"initial_ball_position\",\"ball_position\":[";
-    json << pongGame->ballx << ", " << pongGame->bally << "],";
-    json << "\"ball_size\":" << ballRadius << "}";
-
-    server.wsSend(clientID, json.str());
-
-}
-
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
+
+  cout << message << endl;
 
   // Let's parse it
   Json::Value root;
@@ -221,7 +216,15 @@ void messageHandler(int clientID, string message){
     pongGame->setBallRadius(10);
 
     //setMapInfo(mapDims, paddleDims);
-    checkPartnerPresent(clientID);
+
+    int ballRadius = pongGame->ballradius;
+
+    ostringstream json;
+    json << "{\"phase\":\"initial_ball_position\",\"ball_position\":[";
+    json << pongGame->ballx << ", " << pongGame->bally << "],";
+    json << "\"ball_size\":" << ballRadius << "}";
+
+    server.wsSend(clientID, json.str());
 
   } else if (phaseString.compare("ready_to_start") == 0) {
     cout << "Client " << clientID << " ready_to_start" << endl;
@@ -263,7 +266,6 @@ void messageHandler(int clientID, string message){
 
 
     if(partnerID != -1 ){
-      pongGame->setPlayerNames(pongGame->getPlayerName(partnerID), playerName);
 
       Json::FastWriter writer;
       Json::Value jsonToSend;
@@ -281,15 +283,15 @@ void messageHandler(int clientID, string message){
 
 
 
-//      ostringstream os;
-//      os << "{\"phase\":\"set_opponent\",\"name\":" << playerName <<  "\" }";
-//      string tmp = os.str();
+      // Tell the first player to connect to start
+      server.wsSend(partnerID,"{\"phase\":\"start\"}");
+      printf("Client %d told to start\n", partnerID);
 
-
-
-
+      // Tell the second player to connect to start
       server.wsSend(clientID,"{\"phase\":\"start\"}");
       printf("Client %d told to start\n", clientID);
+
+
       gameObjectsSet = true; // TODO:: clients need to use same object
 
     } else {

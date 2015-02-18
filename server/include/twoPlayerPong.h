@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #define PLAYER_ONE 0
 #define PLAYER_TWO 1
@@ -26,7 +27,7 @@ class pong{
 
   void init();
   int playerIDtoIndex(std::string);
-  
+
  public:
   double ballx, bally;
   int ballradius;
@@ -52,10 +53,12 @@ class pong{
   void setPlayerName(std::string player);
   std::string getPlayerName(int whichPlayer); // player 1 or player 2
   int getPlayerNumber(std::string player); // returns player 1 or player 2
+  std::vector<int> getPaddlePos(std::string player);
+  int getOpponentNum(int playerNum);
 
   int  getScore(std::string playerName);
   int getTotalTries(std::string playerName);
-  
+
   void update(double delTime);
 
   double distance();

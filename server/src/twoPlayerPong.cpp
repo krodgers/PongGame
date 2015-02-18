@@ -92,7 +92,7 @@ void pong::getBallPosition(std::string player, int& outX, int& outY){
   } else{
     printf("wARNING: getting ball position for non existant player %s\n", player.c_str());
   }
-      
+
 }
 
 void pong::setPaddleDirection(std::string player, int direction) {
@@ -105,6 +105,16 @@ void  pong::setPaddlePos(std::string player, int x, int y){
     paddley[playerIDtoIndex(player)] = y;
 
 }
+
+std::vector<int> pong::getPaddlePos(std::string player) {
+
+    std::vector<int> pos (2);
+
+    pos[0] = paddlex[playerIDtoIndex(player)];
+    pos[1] = paddley[playerIDtoIndex(player)];
+    return pos;
+}
+
 void pong::setPaddleDimensions(int h, int w){
   paddleWidth = w;
   paddleHeight = h;
@@ -125,11 +135,18 @@ void pong::setPlayerName(std::string player) {
 
 
 std::string pong::getPlayerName(int whichPlayer){
-  return playerID[whichPlayer-1];
+  return playerID[whichPlayer];
 }
 
 int pong::getPlayerNumber(std::string player){
   return playerIDtoIndex(player) + 1;
+}
+
+int pong::getOpponentNum(int playerNum) {
+    if (playerNum == 0)
+        return 1;
+    else
+        return 0;
 }
 
 int pong::getScore(std::string player) {
