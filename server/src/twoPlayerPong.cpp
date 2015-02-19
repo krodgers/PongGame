@@ -229,8 +229,6 @@ void pong::update( double delTime) {
   if(closeX && closeY ){
     // close enough; counts as hit
     totalTries[PLAYER_ONE]++;
-    std::cout << "Player One hit ball" << std::endl;
-    std::cout << "Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -256,8 +254,6 @@ void pong::update( double delTime) {
   if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) ) && (bally < boardHeight) && (bally > 0)){
     // close enough; counts as hit
     totalTries[PLAYER_TWO]++;
-    std::cout << "Player Two hit ball" << std::endl;
-    std::cout << "Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -284,9 +280,6 @@ void pong::update( double delTime) {
     //score[PLAYER_TWO]++;
     scores[PLAYER_TWO]++;
     totalTries[PLAYER_ONE]++;
-    std::cout << "Player Two scores" << std::endl;
-    std::cout << "Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
-    std::cout << "VECTOR | Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     return;
   } else if( ballx+ballradius >= boardWidth){
     // ball hit right wall
@@ -295,9 +288,6 @@ void pong::update( double delTime) {
     //score[PLAYER_ONE]++;
     scores[PLAYER_ONE]++;
     totalTries[PLAYER_TWO]++;
-    std::cout << "Player One scores" << std::endl;
-    std::cout << "Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
-    std::cout << "VECTOR | Player One Score: " << scores[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << scores[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     return;
     // ballx = boardWidth - WALL_OFFSET - ballradius;
     // xspeed = -xspeed;
