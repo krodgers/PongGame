@@ -215,7 +215,7 @@ void pong::update( double delTime) {
   bool closeY =(bally+ballradius >= paddley[PLAYER_ONE]) &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) && (bally < boardHeight) && (bally > 0); 
   if(closeX && closeY ){
     // close enough; counts as hit
-    totalTries[PLAYER_ONE] ++;
+    totalTries[PLAYER_ONE] += 1;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -240,7 +240,7 @@ void pong::update( double delTime) {
   closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO] && (ballx + ballradius <= boardWidth); // right wall
   if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) ) && (bally < boardHeight) && (bally > 0)){
     // close enough; counts as hit
-    totalTries[PLAYER_TWO]++;
+    totalTries[PLAYER_TWO] += 1;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -264,15 +264,15 @@ void pong::update( double delTime) {
     // went through left wall
     xspeed  = -xspeed;
     reset();
-    score[PLAYER_TWO]++;
-    totalTries[PLAYER_ONE]++;
+    score[PLAYER_TWO]+= 1;
+    totalTries[PLAYER_ONE]+= 1;
     return;
   } else if( ballx+ballradius >= boardWidth){
     // ball hit right wall
     xspeed  = -xspeed;
     reset();
-    score[PLAYER_ONE]++;
-    totalTries[PLAYER_TWO]++;
+    score[PLAYER_ONE]+= 1;
+    totalTries[PLAYER_TWO]+= 1;
     return;
     // ballx = boardWidth - WALL_OFFSET - ballradius;
     // xspeed = -xspeed;
