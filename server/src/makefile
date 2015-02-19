@@ -22,11 +22,11 @@ tests: twoPlayerPong.cpp testTwoPlayer.cpp
 base64.o: base64.cpp
 	g++ -c -I../include base64.cpp
 websocket.o: websocket.cpp
-	g++ -c -I../include websocket.cpp
+	g++ -g -c -I../include websocket.cpp
 twoPlayerPong.o: twoPlayerPong.cpp
-	g++ -c -I../include twoPlayerPong.cpp
+	g++ -g -c -I../include twoPlayerPong.cpp
 pong.o: pong.cpp
-	g++ -c -I../include pong.cpp
+	g++ -g -c -I../include pong.cpp
 sha1.o: sha1.cpp
 	g++ -c -I../include sha1.cpp
 

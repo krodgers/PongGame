@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-#define PLAYER_ONE 0
-#define PLAYER_TWO 1
 
 class pong{
 

@@ -15,6 +15,8 @@
 #define X_VELOCITY 400
 #define Y_VELOCITY 50
 #define Y_ADJUST 50
+#define PLAYER_ONE 0
+#define PLAYER_TWO 1
 
 
 pong::pong(){
@@ -207,10 +209,11 @@ void pong::update( double delTime) {
   bally += (yspeed*delTime);
 
 
-  // Score for Right Player
-  // goes through left wall
-  bool closeX = (ballx - ballradius)  <= paddlex[PLAYER_ONE] + paddleWidth; // left wall;
-  if(closeX && (bally+ballradius >= paddley[PLAYER_ONE] &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) )){
+  // Left Player hits the ball
+  // at left wall
+  bool closeX = ((ballx - ballradius)  <= (paddlex[PLAYER_ONE] + paddleWidth)) && ballx - ballradius >= 0; // left wall;
+  bool closeY =(bally+ballradius >= paddley[PLAYER_ONE]) &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) && (bally < boardHeight) && (bally > 0); 
+  if(closeX && closeY ){
     // close enough; counts as hit
     totalTries[PLAYER_ONE] ++;
     xspeed = -xspeed;
@@ -232,10 +235,10 @@ void pong::update( double delTime) {
   }
 
 
-   // Score for Left Player
-  // goes through right wall
-  closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO]; // right wall
-  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) )){
+   //  Right Player hits the ball
+  // at right wall
+  closeX = (ballx + ballradius)  >= paddlex[PLAYER_TWO] && (ballx + ballradius <= boardWidth); // right wall
+  if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) ) && (bally < boardHeight) && (bally > 0)){
     // close enough; counts as hit
     totalTries[PLAYER_TWO]++;
     xspeed = -xspeed;

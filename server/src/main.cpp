@@ -90,7 +90,7 @@ void* GameLoop(void* arg) {
 	  }
 
 	  // Only send score updates sometimes
-	  if(scoreUpdateCounter % 1000 == 0){
+	  if(scoreUpdateCounter % 100 == 0){
 	    scoreUpdateCounter = 0;
 
 	    Json::FastWriter writer;
@@ -110,8 +110,7 @@ void* GameLoop(void* arg) {
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 	      
 	      ////// DELETE ME /////
-	      printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),
-		     pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
+	      printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
 
 
 	      ///////////////////
