@@ -93,7 +93,7 @@ void* GameLoop(void* arg) {
 	  }
 
 	  // Only send score updates sometimes
-	  if(scoreUpdateCounter % 100 == 0){
+	  if(scoreUpdateCounter % 10 == 0){
 	    scoreUpdateCounter = 0;
 
 	    Json::FastWriter writer;
