@@ -278,7 +278,6 @@ void pong::update( double delTime) {
     xspeed  = -xspeed;
     reset();
     //score[PLAYER_TWO]++;
-    scores[PLAYER_TWO]++;
     totalTries[PLAYER_ONE]++;
     return;
   } else if( ballx+ballradius >= boardWidth){
@@ -286,7 +285,6 @@ void pong::update( double delTime) {
     xspeed  = -xspeed;
     reset();
     //score[PLAYER_ONE]++;
-    scores[PLAYER_ONE]++;
     totalTries[PLAYER_TWO]++;
     return;
     // ballx = boardWidth - WALL_OFFSET - ballradius;
