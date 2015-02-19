@@ -20,7 +20,9 @@ class pong{
   int  paddlex[2], paddley[2]; // player zero is on Left, player one is on Right
   int paddleDirection[];
   int score[2]; // player zero is on Left, player one is on Right
-  int totalTries[2]; // player zero is on Left, player one is on Right
+  std::vector<int> scores;
+  std::vector<int> totalTries;
+  //int totalTries[2]; // player zero is on Left, player one is on Right
   std::string playerName[2]; // maps players' names to playerOne/playerTwo
   int playerIDS[2]; // maps player to an ID (like a clientID)
   void init();

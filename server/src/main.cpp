@@ -183,6 +183,7 @@ void openHandler(int clientID){
   jsonToSend["phase"] = "initialization";
   jsonToSend["player_number"] = clientID;
   server.wsSend(clientID, writer.write(jsonToSend));
+  cout << "here" << endl;
 }
 
 /* called when a client disconnects */
