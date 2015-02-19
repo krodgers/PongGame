@@ -113,7 +113,7 @@ void* GameLoop(void* arg) {
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 
 	      ////// DELETE ME /////
-	      //printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
+	      printf("client %d::Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", i, pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
 
 
 

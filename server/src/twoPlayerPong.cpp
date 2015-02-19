@@ -51,6 +51,14 @@ void pong::init(){
   yspeed = rand() % Y_VELOCITY;
   paddleHeight = 10;
   paddleWidth = 1;
+
+  // paddlex = new int[2];
+  // paddley = new int[2];
+  // paddleDirection = new int[2];
+  // score = new int[2];
+  // totalTries = new int[2];
+  // playerName = new std::string[2];
+
   paddlex[PLAYER_ONE] = paddlex[PLAYER_TWO] = 0;
   paddley[PLAYER_ONE] = paddley[PLAYER_TWO]  = bally;
   paddleDirection[PLAYER_ONE] = paddleDirection[PLAYER_TWO] = 1;
@@ -186,18 +194,22 @@ std::string pong::getOtherPlayersName(int playerID){
 
 
 int pong::getScore(std::string player) {
-    return score[playerNametoIndex(player)];
+  int res = score[playerNametoIndex(player)];
+  return res;
 }
 int pong::getScore(int playerID) {
-    return score[playerIDtoIndex(playerID)];
+  int res = score[playerIDtoIndex(playerID)];
+  return res;
 }
 
 int pong::getTotalTries(std::string player) {
-    return totalTries[playerNametoIndex(player)];
+  int res =totalTries[playerNametoIndex(player)]; 
+  return res;
 }
 
 int pong::getTotalTries(int playerID) {
-    return totalTries[playerIDtoIndex(playerID)];
+  int res = totalTries[playerIDtoIndex(playerID)];
+  return res;
 }
 
 
@@ -268,7 +280,7 @@ void pong::update( double delTime) {
     // went through left wall
     xspeed  = -xspeed;
     reset();
-    score[PLAYER_TWO]+= 1;
+    score[PLAYER_TWO] += 1;
     totalTries[PLAYER_ONE]+= 1;
     std::cout << "Player Two scores";
     std::cout << "Player One Score: " << score[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << score[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
