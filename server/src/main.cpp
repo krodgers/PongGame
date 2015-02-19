@@ -90,8 +90,7 @@ void* GameLoop(void* arg) {
 	  }
 
 	  // Only send score updates sometimes
-	  if(scoreUpdateCounter % 10 == 0){
-	    // TODO:: assign players IDS !!!!!
+	  if(scoreUpdateCounter % 1000 == 0){
 	    scoreUpdateCounter = 0;
 
 	    Json::FastWriter writer;
@@ -110,12 +109,20 @@ void* GameLoop(void* arg) {
 	      
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 	      
+	      ////// DELETE ME /////
+	      printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),
+		     pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
+
+
+	      ///////////////////
+
+	      
 	      jsonToSend.clear();
 	      jsonToSend["phase"] = "opponent_paddle_update";
 	      vector<int> opponentPaddle;
 	      opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(oppID));
 	      ostringstream oppPaddle;
-	      oppPaddle << "[" << opponentPaddle[0] << "," << opponentPaddle[1] << "]";
+        oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
 	      jsonToSend["opponent_paddle"] = oppPaddle.str();
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
 		
@@ -227,7 +234,13 @@ void messageHandler(int clientID, string message){
 
     pongGame->boardWidth = mapDims[2];
     pongGame->boardHeight = mapDims[3];
-    pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);
+
+    if (pongGame->getPlayerNumber(playerName) == 1) {
+      pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);  
+    }
+    else {
+      pongGame->setPaddlePos(playerName, 984, paddleDims[1]);
+    }
     pongGame->setPaddleDimensions(paddleDims[2], paddleDims[3]);
     pongGame->setBallPos(mapDims[2]/2, mapDims[3]/2);
     pongGame->setBallRadius(10);
@@ -341,7 +354,14 @@ void messageHandler(int clientID, string message){
     }
 
     pongGame->setPaddleDirection(playerName, paddleDirection);
-    pongGame->setPaddlePos(playerName, paddlePos[0], paddlePos[1]);
+
+    if (pongGame->getPlayerNumber(playerName) == 1) {
+      pongGame->setPaddlePos(playerName, paddlePos[0], paddlePos[1]);
+    }
+    else {
+      pongGame->setPaddlePos(playerName, 984, paddlePos[1]);
+    }
+    
     /*cout << "Paddle x: " << paddlePos[0] << ", Paddle y: " << paddlePos[1] << endl;
       int x = distribution(generator);
       int y = distribution(generator);*/
