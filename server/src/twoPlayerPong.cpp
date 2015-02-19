@@ -137,7 +137,7 @@ void pong::setPlayerID(int whichPlayer, int playerID){
   } else{
     printf("WARNING: setting an ID for invalid player %d\n", whichPlayer);
   }
-  
+
 }
 
 
@@ -212,10 +212,12 @@ void pong::update( double delTime) {
   // Left Player hits the ball
   // at left wall
   bool closeX = ((ballx - ballradius)  <= (paddlex[PLAYER_ONE] + paddleWidth)) && ballx - ballradius >= 0; // left wall;
-  bool closeY =(bally+ballradius >= paddley[PLAYER_ONE]) &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) && (bally < boardHeight) && (bally > 0); 
+  bool closeY =(bally+ballradius >= paddley[PLAYER_ONE]) &&( bally-ballradius <= (paddley[PLAYER_ONE] + paddleHeight)) && (bally < boardHeight) && (bally > 0);
   if(closeX && closeY ){
     // close enough; counts as hit
     totalTries[PLAYER_ONE] += 1;
+    std::cout << "Player One hit ball";
+    std::cout << "Player One Score: " << score[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << score[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -241,6 +243,8 @@ void pong::update( double delTime) {
   if(closeX && (bally+ballradius >= paddley[PLAYER_TWO] &&( bally-ballradius <= (paddley[PLAYER_TWO] + paddleHeight)) ) && (bally < boardHeight) && (bally > 0)){
     // close enough; counts as hit
     totalTries[PLAYER_TWO] += 1;
+    std::cout << "Player Two hit ball";
+    std::cout << "Player One Score: " << score[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << score[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     xspeed = -xspeed;
     //    std::cout << paddleDirection << std::endl;
     xspeed += xspeed * 0.07;
@@ -266,6 +270,8 @@ void pong::update( double delTime) {
     reset();
     score[PLAYER_TWO]+= 1;
     totalTries[PLAYER_ONE]+= 1;
+    std::cout << "Player Two scores";
+    std::cout << "Player One Score: " << score[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << score[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     return;
   } else if( ballx+ballradius >= boardWidth){
     // ball hit right wall
@@ -273,6 +279,8 @@ void pong::update( double delTime) {
     reset();
     score[PLAYER_ONE]+= 1;
     totalTries[PLAYER_TWO]+= 1;
+    std::cout << "Player One scores";
+    std::cout << "Player One Score: " << score[PLAYER_ONE] << ", Player One Tries:" << totalTries[PLAYER_ONE] << ", Player Two Score: " << score[PLAYER_TWO] << ", Player Two Tries:" << totalTries[PLAYER_TWO] << std::endl;
     return;
     // ballx = boardWidth - WALL_OFFSET - ballradius;
     // xspeed = -xspeed;

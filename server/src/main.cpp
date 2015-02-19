@@ -76,17 +76,20 @@ void* GameLoop(void* arg) {
 	  //  cout << "here" << endl;
 	  pongGame->update(1/60.0);
 
-	  ostringstream json;
-
 	  //////// DELETE ME ///////////
 	  //	  printf("Game Loop: Updating ball position\n");
 	  ///////////////////////////
 
-	  json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-	  json << (int)pongGame->ballx << ", " << (int)pongGame->bally << "]}";
+
 	  vector<int> clientIDs = server.getClientIDs();
 	  for (int i = 0; i < clientIDs.size(); i++){
-            server.wsSend(clientIDs[i], json.str());
+	      ostringstream json;
+	      int x;
+	      int y;
+	      pongGame->getBallPosition(pongGame->getPlayerName(i), x, y);
+	      json << "{\"phase\":\"ball_update\",\"ball_position\":[";
+          json << x << ", " << y << "]}";
+          server.wsSend(clientIDs[i], json.str());
 	  }
 
 	  // Only send score updates sometimes
@@ -106,16 +109,16 @@ void* GameLoop(void* arg) {
 	      jsonToSend["num_tries"] = pongGame->getTotalTries(clientIDs[i]);
 	      jsonToSend["opp_new_score"] = pongGame->getScore(oppID);
 	      jsonToSend["opp_num_tries"] = pongGame->getTotalTries(oppID);
-	      
+
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
-	      
+
 	      ////// DELETE ME /////
-	      printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
+	      //printf("Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
 
 
-	      ///////////////////
 
-	      
+	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+
 	      jsonToSend.clear();
 	      jsonToSend["phase"] = "opponent_paddle_update";
 	      vector<int> opponentPaddle;
@@ -124,18 +127,19 @@ void* GameLoop(void* arg) {
         oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
 	      jsonToSend["opponent_paddle"] = oppPaddle.str();
 	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
-		
+	      cout << "Opponnet Paddle: " << oppPaddle.str();
+
 	      ostringstream out;
 	      vector<int> paddleOne = pongGame->getPaddlePos(pongGame->getPlayerName(clientIDs[i]));
 	      vector<int> paddleTwo = pongGame->getPaddlePos(pongGame->getPlayerName(oppID));
 	      out << "Player " << pongGame->getPlayerName(clientIDs[i]) << "'s paddle position: " << "[" << paddleOne[0] << "," << paddleOne[1] << "]" << endl;
 	      out << "Player " << pongGame->getPlayerName(oppID) << "'s paddle position: " << "[" << paddleTwo[0] << "," << paddleTwo[1] << "]" << endl;
 	      cout << out.str();
-		
+
 	      //////// DELETE ME ///////////
 	      //   printf("Game Loop: Updating score for client %d\n", i);
 	      ///////////////////////////
-		
+
 	    }
 
 	  }
@@ -235,7 +239,7 @@ void messageHandler(int clientID, string message){
     pongGame->boardHeight = mapDims[3];
 
     if (pongGame->getPlayerNumber(playerName) == 1) {
-      pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);  
+      pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);
     }
     else {
       pongGame->setPaddlePos(playerName, 984, paddleDims[1]);
@@ -360,7 +364,7 @@ void messageHandler(int clientID, string message){
     else {
       pongGame->setPaddlePos(playerName, 984, paddlePos[1]);
     }
-    
+
     /*cout << "Paddle x: " << paddlePos[0] << ", Paddle y: " << paddlePos[1] << endl;
       int x = distribution(generator);
       int y = distribution(generator);*/
