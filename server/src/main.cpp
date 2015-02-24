@@ -199,19 +199,20 @@ void openHandler(int clientID){
 
   if (partnerID == -1){
     pongGame = new pong();
-    
+    pongGame->setPlayerID(0, clientID);
     // Start up latency thread for the first client
     int res;
-    bufferC1 = new Latency(&server, clientID);
+    bufferC1 = new Latency(pongGame, &server, clientID);
     res = pthread_create(&messageThread[0], NULL, &bufferC1->threadWrapperFunction, bufferC1);
     if(res != 0){
       printf("WARNING:Message thread failed to create for client %d\n", clientID);
     }
   } else {
     // Start up latency thread for second client
+    pongGame->setPlayerID(1,clientID);
     int res;
-    bufferC2 = new Latency(&server, clientID);
-    res = pthread_create(&messageThread[1], NULL, &bufferC2->threadWrapperFunction, bufferC2);
+    bufferC2 = new Latency(pongGame, &server, clientID);
+    res = pthread_create( &messageThread[1], NULL, &bufferC2->threadWrapperFunction, bufferC2);
     if(res != 0){
       printf("WARNING:Message thread failed to create for client %d\n", clientID);
     }
