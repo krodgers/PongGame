@@ -15,6 +15,7 @@
 #include <json/writer.h>
 #include <json/json.h>
 #include "twoPlayerPong.h"
+#include "latency.h"
 #include <cstdlib>
 #ifdef __linux__
 #include <pthread.h>
@@ -26,11 +27,14 @@
 using namespace std;
 
 int serverThread;
+pthread_t messageThread[2];
 int gameLoopThread;
 bool gameObjectsSet;
 webSocket server;
 pong* pongGame;
 int loopCount;
+Latency* bufferC1; // buffer for Client 1
+Latency* bufferC2; // buffer for Client 2
 
 
 void Server(int);
@@ -39,6 +43,8 @@ void closeHandler(int);
 void checkPartnerPresent(int);
 void messageHandler(int, string);
 void* GameLoop(void*);
+void incomingBuffer(int clientID, string message); // sends incoming message to recie
+bool stopThread(int clientID);// Call when messages should no longer be sent/receieved
 
 
 
@@ -52,6 +58,9 @@ int main(int argc, char *argv[]){
   cin >> port;
 
   loopCount = 1;
+  // messageThread[0] = pthread_t ;
+  // messageThread[1] = pthread();
+  
 
 #ifdef __linux__
   pthread_t id;
@@ -76,20 +85,21 @@ void* GameLoop(void* arg) {
 	  //  cout << "here" << endl;
 	  pongGame->update(1/60.0);
 
-	  //////// DELETE ME ///////////
-	  //	  printf("Game Loop: Updating ball position\n");
-	  ///////////////////////////
-
-
 	  vector<int> clientIDs = server.getClientIDs();
 	  for (int i = 0; i < clientIDs.size(); i++){
-	      ostringstream json;
-	      int x;
-	      int y;
-	      pongGame->getBallPosition(pongGame->getPlayerName(i), x, y);
-	      json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-          json << x << ", " << y << "]}";
-          server.wsSend(clientIDs[i], json.str());
+	    ostringstream json;
+	    int x;
+	    int y;
+	    pongGame->getBallPosition(pongGame->getPlayerName(i), x, y);
+	    json << "{\"phase\":\"ball_update\",\"ball_position\":[";
+	    json << x << ", " << y << "]}";
+	    if(bufferC1->getID() == clientIDs[i]){
+	      bufferC1->sendMessage(clientIDs[i], json.str());
+	      //    server.wsSend(clientIDs[i], json.str());
+	    } else {
+	      bufferC2->sendMessage(clientIDs[i], json.str());
+
+	    }
 	  }
 
 	  // Only send score updates sometimes
@@ -110,24 +120,38 @@ void* GameLoop(void* arg) {
 	      jsonToSend["opp_new_score"] = pongGame->getScore(oppID);
 	      jsonToSend["opp_num_tries"] = pongGame->getTotalTries(oppID);
 
-	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      //	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      if(bufferC1->getID() == clientIDs[i]){
+		bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
+	       
+	      } else {
+		bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
+	      }
 
 	      ////// DELETE ME /////
 	      printf("client %d::Scores: score: %d, tries %d, hisScore: %d, hisTries: %d\n", i, pongGame->getScore(clientIDs[i]), pongGame->getTotalTries(clientIDs[i]),pongGame->getScore(oppID),  pongGame->getTotalTries(oppID));
 
 
 
-	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      //server.wsSend(clientIDs[i], writer.write(jsonToSend));
 
 	      jsonToSend.clear();
 	      jsonToSend["phase"] = "opponent_paddle_update";
 	      vector<int> opponentPaddle;
 	      opponentPaddle = pongGame->getPaddlePos(pongGame->getPlayerName(oppID));
 	      ostringstream oppPaddle;
-        oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
+	      oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
 	      jsonToSend["opponent_paddle"] = oppPaddle.str();
-	      server.wsSend(clientIDs[i], writer.write(jsonToSend));
-	      cout << "Opponnet Paddle: " << oppPaddle.str();
+	      
+	      //server.wsSend(clientIDs[i], writer.write(jsonToSend));
+	      if(bufferC1->getID() == clientIDs[i]){
+		bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
+		
+	      } else {
+		bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
+	      }
+	      
+	      cout << "Opponent Paddle: " << oppPaddle.str();
 
 	      ostringstream out;
 	      vector<int> paddleOne = pongGame->getPaddlePos(pongGame->getPlayerName(clientIDs[i]));
@@ -157,6 +181,7 @@ void Server(int port) {
 
   /* start the chatroom server, listen to ip '127.0.0.1' and port '8000' */
   server.startServer(port);
+
 }
 
 void openHandler(int clientID){
@@ -172,9 +197,26 @@ void openHandler(int clientID){
     }
   }
 
-  if (partnerID == -1)
+  if (partnerID == -1){
     pongGame = new pong();
+    
+    // Start up latency thread for the first client
+    int res;
+    bufferC1 = new Latency(&server, clientID);
+    res = pthread_create(&messageThread[0], NULL, &bufferC1->threadWrapperFunction, bufferC1);
+    if(res != 0){
+      printf("WARNING:Message thread failed to create for client %d\n", clientID);
+    }
+  } else {
+    // Start up latency thread for second client
+    int res;
+    bufferC2 = new Latency(&server, clientID);
+    res = pthread_create(&messageThread[1], NULL, &bufferC2->threadWrapperFunction, bufferC2);
+    if(res != 0){
+      printf("WARNING:Message thread failed to create for client %d\n", clientID);
+    }
 
+  }
 
   Json::FastWriter writer;
   Json::Value jsonToSend;
@@ -182,228 +224,60 @@ void openHandler(int clientID){
   // Send the opponent name to the first player to connect
   jsonToSend["phase"] = "initialization";
   jsonToSend["player_number"] = clientID;
-  server.wsSend(clientID, writer.write(jsonToSend));
+
+
+  //  server.wsSend(clientID, writer.write(jsonToSend));
+  if(bufferC1->getID() == clientID){
+    bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+    
+  } else {
+    bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+  }
+  
   cout << "here" << endl;
 }
 
 /* called when a client disconnects */
 void closeHandler(int clientID){
 
+  stopThread(clientID);
   printf("Client %d disconnected\n", clientID);
+
 }
 
-/* called when a client sends a message to the server */
-void messageHandler(int clientID, string message){
+void messageHandler(int clientID, std::string message){
+  
+  if(clientID == bufferC1->getID())
+    bufferC1->receiveMessage(clientID, message);
+  else
+    bufferC2->receiveMessage(clientID, message);
 
-  //cout << message << endl;
+}
 
+// Call when messages should no longer be sent/receieved
+// returns if threads were succesfully stopped
+// clientID:  the clientID of the buffer to stop
+bool stopThread(int clientID){
+  int s;
+  void* res;
+  bool returnVal = true;
 
-  // Let's parse it
-  Json::Value root;
-  Json::Reader reader;
-  bool parsedSuccess = reader.parse(message,
-				    root,
-				    false);
-  string phaseString = root["phase"].asString();
-  string playerName = root["name"].asString();
+  pthread_t threadToCancel = clientID = bufferC1->getID() ? messageThread[0] : messageThread[1];
 
-  if (phaseString.compare("initial_dimensions") == 0) {
-    //////// DELETE ME ///////////
-    printf("Phase String: initial_dimensions\n");
-    ///////////////////////////
-
-    const Json::Value mapDimJson = root["map_dimensions"];
-    const Json::Value paddleDimJson = root["paddle_dimensions"];
-
-    vector<int> mapDims(mapDimJson.size());
-    vector<int> paddleDims(paddleDimJson.size());
-
-    cout << "mapJSOn size: " << mapDimJson.size() << "paddleJson Size: " << paddleDimJson.size() << endl;
-
-    cout << "Map Dimensions:" << endl;
-    for (int i = 0; i < mapDimJson.size(); i++) {
-      mapDims[i] = mapDimJson[i].asInt();
-      cout << mapDims[i] << endl;
-    }
-
-    cout << "Paddle Dimensions:" << endl;
-    for (int i = 0; i < paddleDimJson.size(); i++) {
-      paddleDims[i] = paddleDimJson[i].asInt();
-      cout << paddleDims[i] << endl;
-    }
-
-
-    pongGame->setPlayerName(playerName);
-    pongGame->setPlayerID(pongGame->getPlayerNumber(playerName)-1, clientID);
-
-    pongGame->boardWidth = mapDims[2];
-    pongGame->boardHeight = mapDims[3];
-
-    if (pongGame->getPlayerNumber(playerName) == 1) {
-      pongGame->setPaddlePos(playerName, paddleDims[0], paddleDims[1]);
-    }
-    else {
-      pongGame->setPaddlePos(playerName, 984, paddleDims[1]);
-    }
-    pongGame->setPaddleDimensions(paddleDims[2], paddleDims[3]);
-    pongGame->setBallPos(mapDims[2]/2, mapDims[3]/2);
-    pongGame->setBallRadius(10);
-
-    //setMapInfo(mapDims, paddleDims);
-
-    int ballRadius = pongGame->ballradius;
-
-    ostringstream json;
-    json << "{\"phase\":\"initial_ball_position\",\"ball_position\":[";
-    json << pongGame->ballx << ", " << pongGame->bally << "],";
-    json << "\"ball_size\":" << ballRadius << "}";
-
-    server.wsSend(clientID, json.str());
-
-  } else if (phaseString.compare("ready_to_start") == 0) {
-    cout << "Client " << clientID << " ready_to_start" << endl;
-    // todo, figure out what to do when we have two clients perhaps
-    // create a while loop that waits until another client has
-    // connected or something
-
-    // send request for player's information
-    server.wsSend(clientID, "{\"phase\":\"send_info\"}");
-    const Json::Value ballPosJson = root["ball_position"];
-    vector<int> ballPos(ballPosJson.size());
-
-    for (int i = 0; i < ballPosJson.size(); i++) {
-      ballPos[i] = ballPosJson[i].asInt();
-    }
-
-    if (ballPos[0] != pongGame->ballx || ballPos[1] != pongGame->bally){
-      // todo, do something to remedy situation where ball
-      // position is not correct
-    } else {
-    }
-
-
-
-
-  } else if (phaseString.compare("exchange_info") == 0){
-    cout << "Client " << clientID << " exchange_info" << endl;
-
-    // check for presence of another player
-    // assuming that only 2 clients are going to be allowed to connect
-    vector<int> clientIDs = server.getClientIDs();
-    int partnerID = -1;
-    for (int i = 0; i < clientIDs.size(); i++){
-      if (clientIDs[i] != clientID) {
-        partnerID = clientIDs[i];
-      }
-    }
-    cout << "Client " << clientID << " has partner " << partnerID <<  endl;
-
-
-    if(partnerID != -1 ){
-
-      Json::FastWriter writer;
-      Json::Value jsonToSend;
-
-      // Send the opponent name to the first player to connect
-      jsonToSend["phase"] = "set_opponent";
-      jsonToSend["name"] = playerName;
-      server.wsSend(partnerID, writer.write(jsonToSend));
-
-      // Send the opponent name to the second player to connect
-      jsonToSend.clear();
-      jsonToSend["phase"] = "set_opponent";
-      jsonToSend["name"] = pongGame->getPlayerName(partnerID);
-      server.wsSend(clientID, writer.write(jsonToSend));
-
-
-
-      // Tell the first player to connect to start
-      server.wsSend(partnerID,"{\"phase\":\"start\"}");
-      printf("Client %d told to start\n", partnerID);
-
-      // Tell the second player to connect to start
-      server.wsSend(clientID,"{\"phase\":\"start\"}");
-      printf("Client %d told to start\n", clientID);
-
-
-      gameObjectsSet = true; // TODO:: clients need to use same object
-
-    } else {
-      // send wait signal
-      server.wsSend(clientID, "{\"phase\":\"wait\"}");
-      printf("Client %d told to wait\n", clientID);
-    }
-
-
-  } else if (phaseString.compare("paddle_update") == 0) {
-    //////// DELETE ME ///////////
-    //    printf("Phase String: paddle_update\n");
-    ///////////////////////////
-    int paddleDirection = root["paddle_direction"].asInt();
-    const Json::Value paddlePosJson = root["paddle_position"];
-    vector<int> paddlePos(paddlePosJson.size());
-    for (int i = 0; i < paddlePosJson.size(); i++) {
-      paddlePos[i] = paddlePosJson[i].asInt();
-    }
-    /* todo, Now need to do stuff to actually use this information
-    ** in the physics engine to update paddle location
-    */
-
-    if (playerName.compare("abe") == 0 && paddlePos[0] == 0) {
-      cout << "suuuhhhhweeeeet" << endl;
-    }
-
-    if (playerName.compare("Kevin") == 0 && paddlePos[0] == 0) {
-      cout << "suuuhhhhweeeeet" << endl;
-    }
-
-    pongGame->setPaddleDirection(playerName, paddleDirection);
-
-    if (pongGame->getPlayerNumber(playerName) == 1) {
-      pongGame->setPaddlePos(playerName, paddlePos[0], paddlePos[1]);
-    }
-    else {
-      pongGame->setPaddlePos(playerName, 984, paddlePos[1]);
-    }
-
-    /*cout << "Paddle x: " << paddlePos[0] << ", Paddle y: " << paddlePos[1] << endl;
-      int x = distribution(generator);
-      int y = distribution(generator);*/
-
-    /*ostringstream json;
-      json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-      json << x << ", " << y << "]}";
-
-      server.wsSend(clientID, json.str());*/
-  } else if(phaseString.compare("disconnect") == 0){
-    // assuming that only 2 clients are going to be allowed to connect
-    // send message to partner telling him to disconnect
-    vector<int> clientIDs = server.getClientIDs();
-    int partnerID = -1;
-    for (int i = 0; i < clientIDs.size(); i++){
-      if (clientIDs[i] != clientID) {
-        partnerID = clientIDs[i];
-      }
-    }
-
-    Json::FastWriter writer;
-    Json::Value jsonToSend;
-    if(partnerID != -1 ){
-      // has partner
-      jsonToSend["phase"] = "disconnected";
-      server.wsSend(partnerID, writer.write(jsonToSend));
-
-    } else {
-      // has no partner
-      //////// DELETE ME ///////////
-      printf("Phase String: disconnect\n");
-      ///////////////////////////
-      gameObjectsSet = false;
-      delete pongGame;
-
-    }
-
-  }else{
-
+  s = pthread_cancel(threadToCancel);
+  if (s != 0){
+    printf("WARNING: Unable to cancel messageThread\n");
+    returnVal = false;
   }
+  s = pthread_join(threadToCancel, &res);
+  if(res != 0) {
+    printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+    returnVal = false;
+  }
+
+  return returnVal;
+
 }
+
+
+
