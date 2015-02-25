@@ -6,9 +6,11 @@
 #ifdef __LINUX__
 #include <sys/time.h>
 #endif
+
 #include <unistd.h>
 #include <stdio.h>
 #include "latency.h"
+#include <sys/time.h>
 
 extern bool gameObjectsSet;
 
@@ -91,15 +93,16 @@ void Latency::clearReceiveBuffer() {
 }
 
 // called when server gets message
-void Latency::receiveMessage(int clientID, std::string message){
-  printf("%d:RCVMessage\n", ID);
-  while(receiveLock);
-  receiveLock = 1;
-  // add time stamp
-  //  std::string thingRcvd = message; // for debugging, should be deleted
-  //thingRcvd = addTimestamp(message);
-  receiveBuffer->push(message);
-  receiveIDs->push(clientID);
+void Latency::receiveMessage(int clientID, std::string message) {
+    printf("%d:RCVMessage\n", ID);
+    while (receiveLock);
+    receiveLock = 1;
+    // add time stamp
+    //  std::string thingRcvd = message; // for debugging, should be deleted
+    //thingRcvd = addTimestamp(message);
+    receiveBuffer->push(message);
+    receiveIDs->push(clientID);
+    receiveLock = 0;
 }
 
 // add message to send queue
@@ -116,40 +119,40 @@ void Latency::sendMessage(int clientID, std::string message) {
 
 // adds timestamp to message and returns stamped message
 // added bit looks like "time_stamp:hr,min,sec,millisec"
-std::string Latency::addTimestamp(std::string message){
-  // Let's parse it
-  Json::Value root;
-  Json::Reader reader;
-  Json::FastWriter writer;
+std::string Latency::addTimestamp(std::string message) {
+    // Let's parse it
+    Json::Value root;
+    Json::Reader reader;
+    Json::FastWriter writer;
 
-  bool parsedSuccess = reader.parse(message,root, false);
-  if(!parsedSuccess)
-    printf("WARNING: %d- Unsucessful parse when adding time stamp.\n", ID);
-  
-  // Get milliseconds
-  struct timeval tv;
- 
-gettimeofday(&tv, NULL);
- 
- unsigned long long millis =
-   (unsigned long long)(tv.tv_sec) * 1000 +
-   (unsigned long long)(tv.tv_usec) / 1000;
- ostringstream stamp;
- stamp << millis;
- printf("Time: %s\n", stamp.str().c_str());
- root["time_stamp"] = stamp.str();
- 
- return writer.write(root);
+    bool parsedSuccess = reader.parse(message, root, false);
+    if (!parsedSuccess)
+        printf("WARNING: %d- Unsucessful parse when adding time stamp.\n", ID);
+
+    // Get milliseconds
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    unsigned long long millis =
+            (unsigned long long) (tv.tv_sec) * 1000 +
+                    (unsigned long long) (tv.tv_usec) / 1000;
+    ostringstream stamp;
+    stamp << millis;
+    printf("Time: %s\n", stamp.str().c_str());
+    root["time_stamp"] = stamp.str();
+
+    return writer.write(root);
 
 
 }
 
-double Latency::getReceiveLatency(){
-  return clientLatency;
+double Latency::getReceiveLatency() {
+    return clientLatency;
 }
 
-void* Latency::threadWrapperFunction(void* classRef){
-  ((Latency*)classRef)->messageHandlingLoop();
+void *Latency::threadWrapperFunction(void *classRef) {
+    ((Latency *) classRef)->messageHandlingLoop();
 }
 
 
@@ -157,25 +160,25 @@ void* Latency::threadWrapperFunction(void* classRef){
 void *Latency::messageHandlingLoop() {
     printf("%d:Thread Starting\n", ID);
     sendAndReceive = true;
-  
-  // allow the thread to be cancelled
-  int s; 
-  s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-  if (s != 0)
-    printf("WARNING: Unable to set cancellation on message Thread\n");
-  // start sending and receiving
-  printf("%d: Starting sending rcving loop\n", ID);
-  while(sendAndReceive){
-    if(!sendBuffer->empty()){
-      usleep(1000*latencyTime);
-      while(messageLock); // lock on send buffer
-      messageLock = 1;
-      std::string thingToSend = sendBuffer->top();
-      thingToSend = addTimestamp(sendBuffer->top());
-      server->wsSend(sendIDs->top(), thingToSend);
-      sendIDs->pop();
-      sendBuffer->pop();
-      messageLock = 0;
+
+    // allow the thread to be cancelled
+    int s;
+    s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0)
+        printf("WARNING: Unable to set cancellation on message Thread\n");
+    // start sending and receiving
+    printf("%d: Starting sending rcving loop\n", ID);
+    while (sendAndReceive) {
+        if (!sendBuffer->empty()) {
+            usleep(1000 * latencyTime);
+            while (messageLock); // lock on send buffer
+            messageLock = 1;
+            std::string thingToSend = sendBuffer->top();
+            thingToSend = addTimestamp(sendBuffer->top());
+            server->wsSend(sendIDs->top(), thingToSend);
+            sendIDs->pop();
+            sendBuffer->pop();
+            messageLock = 0;
 
 
         }
@@ -199,35 +202,35 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
     //cout << message << endl;
 
 
-  // Let's parse it
-  Json::Value root;
-  Json::Reader reader;
-  bool parsedSuccess = reader.parse(message,
-				    root,
-				    false);
-  string phaseString = root["phase"].asString();
-  string playerName = root["name"].asString();
+    // Let's parse it
+    Json::Value root;
+    Json::Reader reader;
+    bool parsedSuccess = reader.parse(message,
+            root,
+            false);
+    string phaseString = root["phase"].asString();
+    string playerName = root["name"].asString();
 
-  Player* curPlayer = pongGame->getPlayerFromClientID(clientID);
-  Player* opponent = pongGame->getOpponent(curPlayer);
-  
-  long long timeStamp = root["time_stamp"].asInt();
+    Player *curPlayer = pongGame->getPlayerFromClientID(clientID);
+    Player *opponent = pongGame->getOpponent(curPlayer);
 
-  struct timeval tv;
+    long long timeStamp = root["time_stamp"].asInt();
 
-  gettimeofday(&tv, NULL);
+    struct timeval tv;
 
-unsigned long long currMillis =
-  (unsigned long long)(tv.tv_sec) * 1000 +
-  (unsigned long long)(tv.tv_usec) / 1000;
+    gettimeofday(&tv, NULL);
+
+    unsigned long long currMillis =
+            (unsigned long long) (tv.tv_sec) * 1000 +
+                    (unsigned long long) (tv.tv_usec) / 1000;
 
 
-  clientLatency = currMillis - timeStamp;
-  printf("clientLatency: %.4f\n", clientLatency);
-  if (phaseString.compare("initial_dimensions") == 0) {
-    //////// DELETE ME ///////////
-    printf("Phase String: initial_dimensions\n");
-    ///////////////////////////
+    clientLatency = currMillis - timeStamp;
+    printf("clientLatency: %.4f\n", clientLatency);
+    if (phaseString.compare("initial_dimensions") == 0) {
+        //////// DELETE ME ///////////
+        printf("Phase String: initial_dimensions\n");
+        ///////////////////////////
 
         const Json::Value mapDimJson = root["map_dimensions"];
         const Json::Value paddleDimJson = root["paddle_dimensions"];
@@ -262,7 +265,7 @@ unsigned long long currMillis =
             curPlayer->setPaddlePosition(984, paddleDims[1]);
         }
         curPlayer->setPaddleDimensions(paddleDims[3], paddleDims[2]);
-        pongGame->setBallPos(mapDims[2]/2, mapDims[3]/2);
+        pongGame->setBallPos(mapDims[2] / 2, mapDims[3] / 2);
         pongGame->setBallRadius(10);
 
         //setMapInfo(mapDims, paddleDims);
@@ -299,7 +302,7 @@ unsigned long long currMillis =
         cout << "Client " << clientID << " exchange_info" << endl;
 
 
-        if(opponent->getAssignedClientID() != -1 ){
+        if (opponent->getAssignedClientID() != -1) {
 
             Json::FastWriter writer;
             Json::Value jsonToSend;
@@ -318,10 +321,10 @@ unsigned long long currMillis =
 
 
             // Tell the first player to connect to start
-            server->wsSend(pongGame->playerOne->getAssignedClientID(),"{\"phase\":\"start\"}");
+            server->wsSend(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
 
             // Tell the second player to connect to start
-            server->wsSend(pongGame->playerTwo->getAssignedClientID(),"{\"phase\":\"start\"}");
+            server->wsSend(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
 
 
             gameObjectsSet = true; // TODO:: clients need to use same object

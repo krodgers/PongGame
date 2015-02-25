@@ -100,20 +100,19 @@ void pong::getBallPosition(std::string player, int &outX, int &outY) {
 }
 
 
-
 // paddleDirection: 1/-1 for up/down
 // paddleX assumed to be constant
-void pong::update( double delTime) {
+void pong::update(double delTime) {
 
-    ballx += (xspeed*delTime);
-    bally += (yspeed*delTime);
+    ballx += (xspeed * delTime);
+    bally += (yspeed * delTime);
 
 
     // Left Player hits the ball
     // at left wall
-    bool closeX = ((ballx - ballradius)  <= (playerOne->getPaddleXPosition() + playerOne->getPaddleWidth())) && ballx - ballradius >= 0; // left wall;
-    bool closeY =(bally+ballradius >= playerOne->getPaddleYPosition()) &&( bally-ballradius <= (playerOne->getPaddleYPosition() + playerOne->getPaddleHeight())) && (bally < boardHeight) && (bally > 0);
-    if(closeX && closeY ){
+    bool closeX = ((ballx - ballradius) <= (playerOne->getPaddleXPosition() + playerOne->getPaddleWidth())) && ballx - ballradius >= 0; // left wall;
+    bool closeY = (bally + ballradius >= playerOne->getPaddleYPosition()) && (bally - ballradius <= (playerOne->getPaddleYPosition() + playerOne->getPaddleHeight())) && (bally < boardHeight) && (bally > 0);
+    if (closeX && closeY) {
         // close enough; counts as hit
         playerOne->incrementTries();
         playerOne->incrementHits();
@@ -123,7 +122,7 @@ void pong::update( double delTime) {
         xspeed = -xspeed;
         //    std::cout << paddleDirection << std::endl;
         xspeed += xspeed * 0.07;
-        switch(playerOne->getPaddleDirection()){
+        switch (playerOne->getPaddleDirection()) {
             case 1:
                 yspeed += Y_ADJUST;
                 break;
@@ -141,8 +140,8 @@ void pong::update( double delTime) {
 
     //  Right Player hits the ball
     // at right wall
-    closeX = (ballx + ballradius)  >= playerTwo->getPaddleXPosition() && (ballx + ballradius <= boardWidth); // right wall
-    if(closeX && (bally+ballradius >= playerTwo->getPaddleYPosition() &&( bally-ballradius <= (playerTwo->getPaddleYPosition() + playerTwo->getPaddleHeight())) ) && (bally < boardHeight) && (bally > 0)){
+    closeX = (ballx + ballradius) >= playerTwo->getPaddleXPosition() && (ballx + ballradius <= boardWidth); // right wall
+    if (closeX && (bally + ballradius >= playerTwo->getPaddleYPosition() && (bally - ballradius <= (playerTwo->getPaddleYPosition() + playerTwo->getPaddleHeight()))) && (bally < boardHeight) && (bally > 0)) {
         // close enough; counts as hit
         playerTwo->incrementTries();
         playerTwo->incrementHits();
@@ -151,7 +150,7 @@ void pong::update( double delTime) {
         xspeed = -xspeed;
         //    std::cout << paddleDirection << std::endl;
         xspeed += xspeed * 0.07;
-        switch(playerTwo->getPaddleDirection()){
+        switch (playerTwo->getPaddleDirection()) {
             case 1:
                 yspeed += Y_ADJUST;
                 break;
@@ -167,18 +166,18 @@ void pong::update( double delTime) {
     }
 
 
-    if(ballx-ballradius < 0 ){
+    if (ballx - ballradius < 0) {
         // went through left wall
-        xspeed  = -xspeed;
+        xspeed = -xspeed;
         reset();
         //score[PLAYER_TWO]++;
         playerOne->incrementTries();
         std::cout << "Player Two scores" << std::endl;
         std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
         return;
-    } else if( ballx+ballradius >= boardWidth){
+    } else if (ballx + ballradius >= boardWidth) {
         // ball hit right wall
-        xspeed  = -xspeed;
+        xspeed = -xspeed;
         reset();
         //score[PLAYER_ONE]++;
         playerTwo->incrementTries();
@@ -190,11 +189,11 @@ void pong::update( double delTime) {
 
     }
 
-    if(bally-ballradius < 0){
+    if (bally - ballradius < 0) {
         // went through top
         yspeed = -yspeed;
         bally = WALL_OFFSET + ballradius;
-    } else if(bally+ballradius > boardHeight){
+    } else if (bally + ballradius > boardHeight) {
         // went through floor
         yspeed = -yspeed;
         bally = boardHeight - WALL_OFFSET - ballradius; // put just about the floor
@@ -221,7 +220,7 @@ void  pong::reset() {
 
 }
 
-Player* pong::getPlayerFromClientID(int clientID) {
+Player *pong::getPlayerFromClientID(int clientID) {
     if (clientID == playerOne->getAssignedClientID())
         return playerOne;
     else if (clientID == playerTwo->getAssignedClientID())
@@ -233,7 +232,7 @@ Player* pong::getPlayerFromClientID(int clientID) {
 
 }
 
-Player* pong::getPlayerFromName(std::string name) {
+Player *pong::getPlayerFromName(std::string name) {
     if (name.compare(playerOne->getName()) == 0)
         return playerOne;
     else if (name.compare(playerTwo->getName()) == 0)
@@ -244,7 +243,7 @@ Player* pong::getPlayerFromName(std::string name) {
     }
 }
 
-Player* pong::getOpponent(Player* player) {
+Player *pong::getOpponent(Player *player) {
     if (player == playerOne)
         return playerTwo;
     else

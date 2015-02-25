@@ -18,6 +18,7 @@ class pong {
 
 private:
     double xspeed, yspeed;
+
     void init();
 
 
@@ -28,10 +29,10 @@ public:
     int boardHeight, boardWidth;
     bool gameObjectSet;
 
-    Player* playerOne;
-    Player* playerTwo;
+    Player *playerOne;
+    Player *playerTwo;
 
-    Player* players[2];
+    Player *players[2];
 
     pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddle1StartX, int paddle1StartY, int paddle2StartX, int paddle2StartY);
 
@@ -47,9 +48,11 @@ public:
 
     void getBallPosition(std::string player, int &outX, int &outY);
 
-    Player* getPlayerFromClientID(int clientID);
-    Player* getPlayerFromName(std::string name);
-    Player* getOpponent(Player* player);
+    Player *getPlayerFromClientID(int clientID);
+
+    Player *getPlayerFromName(std::string name);
+
+    Player *getOpponent(Player *player);
 
 
     void update(double delTime);

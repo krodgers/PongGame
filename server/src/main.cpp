@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
+
 void *GameLoop(void *arg) {
     int scoreUpdateCounter = 0;
     while (true) {
@@ -210,7 +211,6 @@ void openHandler(int clientID) {
     }
 
 
-
     if (partnerID == -1) {
         pongGame = new pong();
         // Start up latency thread for the first client
@@ -231,7 +231,7 @@ void openHandler(int clientID) {
 
     }
 
-    for (int i = 0; i < clientIDs.size(); i++){
+    for (int i = 0; i < clientIDs.size(); i++) {
         if (pongGame->playerOne->getAssignedClientID() == -1)
             pongGame->playerOne->setAssignedClientID(clientIDs[i]);
         else
