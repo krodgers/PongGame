@@ -16,6 +16,10 @@
 #ifndef __latency_h_
 #define __latency_h_
 
+#define CLOCKS_PER_HOUR (CLOCKS_PER_SEC*60*60)
+#define CLOCKS_PER_MIN (CLOCKS_PER_SEC*60)
+#define CLOCKS_PER_MILLISEC (CLOCKS_PER_SEC/1000.0)
+
 
 
 class Latency{
@@ -38,7 +42,7 @@ class Latency{
   // thread routine to grab messages off the buffer and send them
   // or process incoming messages
   void* messageHandlingLoop();
-  
+  double  clientLatency; // the latency from server to client
 
  public:
   
@@ -48,11 +52,12 @@ class Latency{
   int getID();
   static void* threadWrapperFunction(void* classRef);
   // Start the message sending/receiving thread
-  bool startMessageLoop();
   void setPongGame(pong* game);
   // called when server gets message
   void receiveMessage(int clientID, std::string  message);
   void sendMessage(int clientIDToSendTo, std::string message);
+  std::string addTimestamp(std::string message); // adds timestamp to message and returns stamped message
+  double getReceiveLatency();
   void clearSendBuffer();
   void clearReceiveBuffer();
   
@@ -62,3 +67,4 @@ class Latency{
 
 
 #endif
+ 

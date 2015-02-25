@@ -3,7 +3,9 @@
 // Kevin Malby UCID: 36928917	  //
 ////////////////////////////////////
 
-#include <time.h>
+#ifdef __LINUX__
+#include <sys/time.h>
+#endif
 #include <unistd.h>
 #include <stdio.h>
 #include "latency.h"
@@ -94,6 +96,9 @@ void Latency::receiveMessage(int clientID, std::string message){
   printf("%d:RCVMessage\n", ID);
   while(receiveLock);
   receiveLock = 1;
+  // add time stamp
+  //  std::string thingRcvd = message; // for debugging, should be deleted
+  //thingRcvd = addTimestamp(message);
   receiveBuffer->push(message);
   receiveIDs->push(clientID);
   receiveLock = 0;
@@ -110,23 +115,45 @@ void Latency::sendMessage(int clientID, std::string message ) {
   messageLock = 0;
 }
 
+
+// adds timestamp to message and returns stamped message
+// added bit looks like "time_stamp:hr,min,sec,millisec"
+std::string Latency::addTimestamp(std::string message){
+  // Let's parse it
+  Json::Value root;
+  Json::Reader reader;
+  Json::FastWriter writer;
+
+  bool parsedSuccess = reader.parse(message,root, false);
+  if(!parsedSuccess)
+    printf("WARNING: %d- Unsucessful parse when adding time stamp.\n", ID);
+  
+  // Get milliseconds
+  struct timeval tv;
+ 
+gettimeofday(&tv, NULL);
+ 
+ unsigned long long millis =
+   (unsigned long long)(tv.tv_sec) * 1000 +
+   (unsigned long long)(tv.tv_usec) / 1000;
+ ostringstream stamp;
+ stamp << millis;
+ printf("Time: %s\n", stamp.str().c_str());
+ root["time_stamp"] = stamp.str();
+ 
+ return writer.write(root);
+
+
+}
+
+double Latency::getReceiveLatency(){
+  return clientLatency;
+}
+
 void* Latency::threadWrapperFunction(void* classRef){
   ((Latency*)classRef)->messageHandlingLoop();
 }
 
-
-bool Latency::startMessageLoop(){
-  //   pthread_t id;
-  // messageThread = pthread_create(&id, NULL, &Latency::threadWrapperFunction, &this);
-  //   sendAndReceive = true;
-  
-  //   if(messageThread != 0) {
-  //     printf("Error: pthread_create() failed\n");
-  //     pthread_exit(NULL);
-  //     return false;
-  //   }
-  return true;
-}
 
 // thread routine to grab messages off the buffer and send them
 void* Latency::messageHandlingLoop(){
@@ -145,7 +172,9 @@ void* Latency::messageHandlingLoop(){
       usleep(1000*latencyTime);
       while(messageLock); // lock on send buffer
       messageLock = 1;
-      server->wsSend(sendIDs->top(), sendBuffer->top());
+      std::string thingToSend = sendBuffer->top();
+      thingToSend = addTimestamp(sendBuffer->top());
+      server->wsSend(sendIDs->top(), thingToSend);
       sendIDs->pop();
       sendBuffer->pop();
       messageLock = 0;
@@ -179,7 +208,19 @@ void Latency::handleIncomingMessage(int clientID, std::string message){
 				    false);
   string phaseString = root["phase"].asString();
   string playerName = root["name"].asString();
+  long long timeStamp = root["time_stamp"].asInt();
 
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+
+unsigned long long currMillis =
+  (unsigned long long)(tv.tv_sec) * 1000 +
+  (unsigned long long)(tv.tv_usec) / 1000;
+
+
+  clientLatency = currMillis - timeStamp;
+  printf("clientLatency: %.4f\n", clientLatency);
   if (phaseString.compare("initial_dimensions") == 0) {
     //////// DELETE ME ///////////
     printf("Phase String: initial_dimensions\n");
