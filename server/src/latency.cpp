@@ -14,7 +14,7 @@
 
 extern bool gameObjectsSet;
 
-#define LATENCY_TIME 3
+#define LATENCY_TIME 500
 
 
 // Latency Constructors
@@ -51,10 +51,10 @@ Latency::~Latency() {
 
 // Initializes the memory objects
 void Latency::init() {
-    sendBuffer = new std::stack<std::string>;
-    receiveBuffer = new std::stack<std::string>;
-    sendIDs = new std::stack<int>();
-    receiveIDs = new std::stack<int>();
+    sendBuffer = new std::queue<std::string>;
+    receiveBuffer = new std::queue<std::string>;
+    sendIDs = new std::queue<int>();
+    receiveIDs = new std::queue<int>();
     sendAndReceive = false;
     messageLock = 0;
     receiveLock = 0;
@@ -75,8 +75,8 @@ void Latency::clearSendBuffer() {
     messageLock = 1;
     delete sendBuffer;
     delete sendIDs;
-    sendBuffer = new std::stack<std::string>;
-    sendIDs = new std::stack<int>;
+    sendBuffer = new std::queue<std::string>;
+    sendIDs = new std::queue<int>;
     messageLock = 0;
 }
 
@@ -87,8 +87,8 @@ void Latency::clearReceiveBuffer() {
     receiveLock = 1;
     delete receiveBuffer;
     delete receiveIDs;
-    receiveBuffer = new std::stack<std::string>;
-    receiveIDs = new std::stack<int>;
+    receiveBuffer = new std::queue<std::string>;
+    receiveIDs = new std::queue<int>;
     receiveLock = 0;
 }
 
@@ -173,9 +173,9 @@ void *Latency::messageHandlingLoop() {
             usleep(1000 * latencyTime);
             while (messageLock); // lock on send buffer
             messageLock = 1;
-            std::string thingToSend = sendBuffer->top();
-            thingToSend = addTimestamp(sendBuffer->top());
-            server->wsSend(sendIDs->top(), thingToSend);
+            std::string thingToSend = sendBuffer->front();
+            thingToSend = addTimestamp(sendBuffer->front());
+            server->wsSend(sendIDs->front(), thingToSend);
             sendIDs->pop();
             sendBuffer->pop();
             messageLock = 0;
@@ -186,7 +186,7 @@ void *Latency::messageHandlingLoop() {
             usleep(1000 * latencyTime);
             while (receiveLock); // lock on receive buffer
             receiveLock = 1;
-            handleIncomingMessage(receiveIDs->top(), receiveBuffer->top());
+            handleIncomingMessage(receiveIDs->front(), receiveBuffer->front());
             receiveIDs->pop();
             receiveBuffer->pop();
             receiveLock = 0;
@@ -214,7 +214,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
     Player *curPlayer = pongGame->getPlayerFromClientID(clientID);
     Player *opponent = pongGame->getOpponent(curPlayer);
 
-    long long timeStamp = root["time_stamp"].asInt();
+    long long timeStamp = root["time_stamp"].asInt64();
 
     struct timeval tv;
 
@@ -277,13 +277,15 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         json << pongGame->ballx << ", " << pongGame->bally << "],";
         json << "\"ball_size\":" << ballRadius << "}";
 
-        server->wsSend(clientID, json.str());
+	sendMessage(clientID, json.str());
+	//   server->wsSend(clientID, json.str());
 
     } else if (phaseString.compare("ready_to_start") == 0) {
         cout << "Client " << clientID << " ready_to_start" << endl;
 
         // send request for player's information
-        server->wsSend(clientID, "{\"phase\":\"send_info\"}");
+	sendMessage(clientID,  "{\"phase\":\"send_info\"}");
+	//        server->wsSend(clientID, "{\"phase\":\"send_info\"}");
         const Json::Value ballPosJson = root["ball_position"];
         vector<int> ballPos(ballPosJson.size());
 
@@ -310,28 +312,34 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
             // Send the opponent name to the first player to connect
             jsonToSend["phase"] = "set_opponent";
             jsonToSend["name"] = playerName;
-            server->wsSend(pongGame->playerOne->getAssignedClientID(), writer.write(jsonToSend));
+	    sendMessage(pongGame->playerOne->getAssignedClientID(), writer.write(jsonToSend));
+	    //     server->wsSend(pongGame->playerOne->getAssignedClientID(), writer.write(jsonToSend));
 
             // Send the opponent name to the second player to connect
             jsonToSend.clear();
             jsonToSend["phase"] = "set_opponent";
             jsonToSend["name"] = opponent->getName();
-            server->wsSend(pongGame->playerTwo->getAssignedClientID(), writer.write(jsonToSend));
+	    sendMessage(pongGame->playerTwo->getAssignedClientID(), writer.write(jsonToSend));
+	    //   server->wsSend(pongGame->playerTwo->getAssignedClientID(), writer.write(jsonToSend));
 
 
 
             // Tell the first player to connect to start
-            server->wsSend(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
+	    sendMessage(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
+
+	    //       server->wsSend(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
 
             // Tell the second player to connect to start
-            server->wsSend(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
+	    sendMessage(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
+	    // server->wsSend(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
 
 
             gameObjectsSet = true; // TODO:: clients need to use same object
 
         } else {
             // send wait signal
-            server->wsSend(clientID, "{\"phase\":\"wait\"}");
+	  sendMessage(clientID, "{\"phase\":\"wait\"}");
+	  //       server->wsSend(clientID, "{\"phase\":\"wait\"}");
             printf("Client %d told to wait\n", clientID);
         }
 
@@ -384,7 +392,9 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         if (partnerID != -1) {
             // has partner
             jsonToSend["phase"] = "disconnected";
-            server->wsSend(partnerID, writer.write(jsonToSend));
+	    sendMessage(partnerID, writer.write(jsonToSend));
+
+	    // server->wsSend(partnerID, writer.write(jsonToSend));
 
         } else {
             // has no partner

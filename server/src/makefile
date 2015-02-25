@@ -5,8 +5,8 @@
 # **/				    #
 #####################################
 
-all: twoPlayerPong.o sha1.o websocket.o base64.o  latency.o
-	g++ -g -I../include -D__linux__ twoPlayerPong.o latency.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
+all: twoPlayerPong.o sha1.o websocket.o base64.o  latency.o player.o
+	g++ -g -I../include -D__linux__ player.o twoPlayerPong.o latency.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
 
 onePlayer: pong.o sha1.o websocket.o base64.o 
 	g++ -g  -I../include -D__linux__ pong.o sha1.o websocket.o base64.o main.cpp -lpthread -L../libraries -ljsoncpp -static -o server
@@ -22,6 +22,8 @@ lat_tests: latency.o websocket.o sha1.o base64.o twoPlayerPong.o latencyTester.c
 	g++ -g -Wall -I../include sha1.o base64.o websocket.o twoPlayerPong.o latency.o latencyTester.cpp -lpthread -L../libraries -lgtest_main -ljsoncpp -o latTests
 
 
+player.o:
+	g++ -c -I../include player.cpp
 base64.o: base64.cpp
 	g++ -c -I../include base64.cpp
 websocket.o: websocket.cpp

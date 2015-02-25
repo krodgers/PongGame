@@ -8,7 +8,7 @@
 #include <json/json.h>
 #include <sstream>
 #include <pthread.h>
-#include <stack>
+#include <queue>
 
 #include "twoPlayerPong.h"
 #include "websocket.h"
@@ -16,20 +16,16 @@
 #ifndef __latency_h_
 #define __latency_h_
 
-#define CLOCKS_PER_HOUR (CLOCKS_PER_SEC*60*60)
-#define CLOCKS_PER_MIN (CLOCKS_PER_SEC*60)
-#define CLOCKS_PER_MILLISEC (CLOCKS_PER_SEC/1000.0)
-
 
 class Latency {
 private:
     friend class latencyTester;
 
     int ID; // to identify which client this buffer is associated with
-    std::stack<std::string> *sendBuffer;
-    std::stack<int> *sendIDs;
-    std::stack<int> *receiveIDs;
-    std::stack<std::string> *receiveBuffer;
+    std::queue<std::string> *sendBuffer;
+    std::queue<int> *sendIDs;
+    std::queue<int> *receiveIDs;
+    std::queue<std::string> *receiveBuffer;
     double latencyTime; // in millisecond
     pong *pongGame;
     webSocket *server;
