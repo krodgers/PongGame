@@ -21,7 +21,6 @@
 #define CLOCKS_PER_MILLISEC (CLOCKS_PER_SEC/1000.0)
 
 
-
 class Latency{
  private:
   friend class latencyTester;
@@ -63,7 +62,6 @@ class Latency{
   
   
 };
-
 
 
 #endif
