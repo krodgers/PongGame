@@ -116,9 +116,6 @@ void pong::update(double delTime) {
         // close enough; counts as hit
         playerOne->incrementTries();
         playerOne->incrementHits();
-        std::cout << "Player One hit ball" << std::endl;
-        std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
-        std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
         xspeed = -xspeed;
         //    std::cout << paddleDirection << std::endl;
         xspeed += xspeed * 0.07;
@@ -145,8 +142,6 @@ void pong::update(double delTime) {
         // close enough; counts as hit
         playerTwo->incrementTries();
         playerTwo->incrementHits();
-        std::cout << "Player Two hit ball" << std::endl;
-        std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
         xspeed = -xspeed;
         //    std::cout << paddleDirection << std::endl;
         xspeed += xspeed * 0.07;
@@ -172,8 +167,6 @@ void pong::update(double delTime) {
         reset();
         //score[PLAYER_TWO]++;
         playerOne->incrementTries();
-        std::cout << "Player Two scores" << std::endl;
-        std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
         return;
     } else if (ballx + ballradius >= boardWidth) {
         // ball hit right wall
@@ -181,8 +174,6 @@ void pong::update(double delTime) {
         reset();
         //score[PLAYER_ONE]++;
         playerTwo->incrementTries();
-        std::cout << "Player One scores" << std::endl;
-        std::cout << "Player One Score: " << playerOne->getHits() << ", Player One Tries:" << playerOne->getTries() << ", Player Two Score: " << playerTwo->getHits() << ", Player Two Tries:" << playerTwo->getTries() << std::endl;
         return;
         // ballx = boardWidth - WALL_OFFSET - ballradius;
         // xspeed = -xspeed;
