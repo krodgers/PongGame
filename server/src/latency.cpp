@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "latency.h"
-#include <sys/time.h>
 
 extern bool gameObjectsSet;
 
@@ -335,4 +334,8 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
      } else {
 
      }
+}
+
+void Latency::stopThread() {
+    sendAndReceive = false;
 }

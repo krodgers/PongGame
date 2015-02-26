@@ -30,7 +30,8 @@ Kathryn Rodgers UCID: 39483825
 using namespace std;
 
 int serverThread;
-pthread_t messageThread[2];
+pthread_t clientOneThread;
+pthread_t clientTwoThread;
 int gameLoopThread;
 bool gameObjectsSet;
 webSocket server;
@@ -67,8 +68,8 @@ int main(int argc, char *argv[]) {
     cin >> port;
 
     loopCount = 1;
-    // messageThread[0] = pthread_t ;
-    // messageThread[1] = pthread();
+    //messageThread[0] = pthread_t ;
+    //messageThread[1] = pthread();
 
 
 #ifdef __linux__
@@ -92,7 +93,6 @@ void *GameLoop(void *arg) {
     int scoreUpdateCounter = 0;
     while (true) {
         if (gameObjectsSet == true) {
-            //  cout << "here" << endl;
             pongGame->update(1 / 60.0);
 
             vector<int> clientIDs = server.getClientIDs();
@@ -134,7 +134,7 @@ void *GameLoop(void *arg) {
             }
 
             // Only send score updates sometimes
-            if (scoreUpdateCounter % 10 == 0) {
+            if (scoreUpdateCounter % 2 == 0) {
                 scoreUpdateCounter = 0;
                 Json::FastWriter writer;
                 Json::Value jsonToSend;
@@ -195,7 +195,7 @@ void openHandler(int clientID) {
         // Start up latency thread for the first client
         int res;
         bufferC1 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&messageThread[0], NULL, &bufferC1->threadWrapperFunction, bufferC1);
+        res = pthread_create(&clientOneThread, NULL, &bufferC1->threadWrapperFunction, bufferC1);
         if (res != 0) {
             printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
@@ -203,7 +203,7 @@ void openHandler(int clientID) {
         // Start up latency thread for second client
         int res;
         bufferC2 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&messageThread[1], NULL, &bufferC2->threadWrapperFunction, bufferC2);
+        res = pthread_create(&clientTwoThread, NULL, &bufferC2->threadWrapperFunction, bufferC2);
         if (res != 0) {
             printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
@@ -260,14 +260,19 @@ bool stopThread(int clientID) {
     void *res;
     bool returnVal = true;
 
-    pthread_t threadToCancel = clientID = bufferC1->getID() ? messageThread[0] : messageThread[1];
+    pthread_t threadToCancel = clientID = bufferC1->getID() ? clientOneThread : clientTwoThread;
 
-    s = pthread_cancel(threadToCancel);
+//    if (clientID == bufferC1->getID())
+//        bufferC1->stopThread();
+//    else
+//        bufferC2->stopThread();
+
+    s = pthread_cancel(clientOneThread);
     if (s != 0) {
         printf("WARNING: Unable to cancel messageThread\n");
         returnVal = false;
     }
-    s = pthread_join(threadToCancel, &res);
+    s = pthread_join(clientOneThread, &res);
     if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;

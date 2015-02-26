@@ -117,7 +117,7 @@ void pong::update(double delTime) {
         playerOne->incrementTries();
         playerOne->incrementHits();
         xspeed = -xspeed;
-        //    std::cout << paddleDirection << std::endl;
+
         xspeed += xspeed * 0.07;
         switch (playerOne->getPaddleDirection()) {
             case 1:
@@ -143,7 +143,7 @@ void pong::update(double delTime) {
         playerTwo->incrementTries();
         playerTwo->incrementHits();
         xspeed = -xspeed;
-        //    std::cout << paddleDirection << std::endl;
+
         xspeed += xspeed * 0.07;
         switch (playerTwo->getPaddleDirection()) {
             case 1:
