@@ -54,7 +54,9 @@ void Latency::init() {
      receiveIDs = new std::queue<int>();
      sendAndReceive = false;
      messageLock = 0;
+     clientLatency = 0;
      receiveLock = 0;
+     totalNumPackets = 0;
 }
 
 
@@ -197,8 +199,10 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 	  (unsigned long long) (tv.tv_usec) / 1000;
 
 
-     clientLatency = currMillis - timeStamp;
-     printf("Client %d Latency: %.4f\n", ID,clientLatency);
+     clientLatency += (currMillis - timeStamp);
+     totalNumPackets += 1;
+     printf("Client %d Packet Latency: %.4f\n", ID,clientLatency);
+     printf("Total average Latency: %.4g\n", clientLatency/totalNumPackets);
      if (phaseString.compare("initial_dimensions") == 0) {
 
 	  const Json::Value mapDimJson = root["map_dimensions"];

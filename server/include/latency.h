@@ -22,6 +22,7 @@ private:
     friend class latencyTester;
 
     int ID; // to identify which client this buffer is associated with
+    int totalNumPackets;
     std::queue<std::string> *sendBuffer;
     std::queue<int> *sendIDs;
     std::queue<int> *receiveIDs;
