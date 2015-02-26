@@ -304,7 +304,7 @@ bool webSocket::wsCheckSizeClientFrame(int clientID) {
 
 void webSocket::wsRemoveClient(int clientID) {
     if (callOnClose != NULL)
-        (clientID);
+        callOnClose(clientID);
 
     wsClient *client = wsClients[clientID];
 

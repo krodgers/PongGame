@@ -53,6 +53,8 @@ public:
 
     int getID();
 
+    void stopThread();
+
     static void *threadWrapperFunction(void *classRef);
 
     // Start the message sending/receiving thread

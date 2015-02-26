@@ -3,18 +3,17 @@
 // Kevin Malby UCID: 36928917	  //
 ////////////////////////////////////
 
-#ifdef __LINUX__
+#ifdef __linux__
 #include <sys/time.h>
 #endif
 
 #include <unistd.h>
 #include <stdio.h>
 #include "latency.h"
-#include <sys/time.h>
 
 extern bool gameObjectsSet;
 
-#define LATENCY_TIME 500
+#define LATENCY_TIME 50
 
 
 // Latency Constructors
@@ -199,7 +198,7 @@ void *Latency::messageHandlingLoop() {
 void Latency::handleIncomingMessage(int clientID, std::string message) {
     printf("%d: Got message\n", ID);
 
-    //cout << message << endl;
+
 
 
     // Let's parse it
@@ -228,9 +227,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
     clientLatency = currMillis - timeStamp;
     printf("clientLatency: %.4f\n", clientLatency);
     if (phaseString.compare("initial_dimensions") == 0) {
-        //////// DELETE ME ///////////
-        printf("Phase String: initial_dimensions\n");
-        ///////////////////////////
+
 
         const Json::Value mapDimJson = root["map_dimensions"];
         const Json::Value paddleDimJson = root["paddle_dimensions"];
@@ -238,18 +235,18 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         vector<int> mapDims(mapDimJson.size());
         vector<int> paddleDims(paddleDimJson.size());
 
-        cout << "mapJSOn size: " << mapDimJson.size() << "paddleJson Size: " << paddleDimJson.size() << endl;
 
-        cout << "Map Dimensions:" << endl;
+
+
         for (int i = 0; i < mapDimJson.size(); i++) {
             mapDims[i] = mapDimJson[i].asInt();
-            cout << mapDims[i] << endl;
+
         }
 
-        cout << "Paddle Dimensions:" << endl;
+
         for (int i = 0; i < paddleDimJson.size(); i++) {
             paddleDims[i] = paddleDimJson[i].asInt();
-            cout << paddleDims[i] << endl;
+
         }
 
 
@@ -281,7 +278,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 	//   server->wsSend(clientID, json.str());
 
     } else if (phaseString.compare("ready_to_start") == 0) {
-        cout << "Client " << clientID << " ready_to_start" << endl;
+
 
         // send request for player's information
 	sendMessage(clientID,  "{\"phase\":\"send_info\"}");
@@ -409,4 +406,8 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
     } else {
 
     }
+}
+
+void Latency::stopThread() {
+    sendAndReceive = false;
 }
