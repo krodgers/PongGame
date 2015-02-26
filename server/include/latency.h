@@ -27,7 +27,8 @@ private:
     std::queue<int> *sendIDs;
     std::queue<int> *receiveIDs;
     std::queue<std::string> *receiveBuffer;
-    double latencyTime; // in millisecond
+    int latencyTimeMax; // in millisecond
+    int latencyTimeMin; // in millisecond
     pong *pongGame;
     webSocket *server;
     bool sendAndReceive;

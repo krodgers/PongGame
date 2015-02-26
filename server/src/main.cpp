@@ -109,27 +109,27 @@ void *GameLoop(void *arg) {
                     bufferC2->sendMessage(clientIDs[i], json.str());
 
                 }
-		// Send Paddle Updates
-		Json::FastWriter writer;
+                // Send Paddle Updates
+                Json::FastWriter writer;
                 Json::Value jsonToSend;
-		Player *curPlayer = pongGame->players[clientIDs[i]];
-		Player *opponent = pongGame->getOpponent(curPlayer);
-		jsonToSend["phase"] = "opponent_paddle_update";
-		vector<int> opponentPaddle;
-		opponentPaddle = opponent->getPaddlePosition();
-		ostringstream oppPaddle;
-		oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
-		jsonToSend["opponent_paddle"] = oppPaddle.str();
-		
-		//server.wsSend(clientIDs[i], writer.write(jsonToSend));
-		if (bufferC1->getID()  == clientIDs[i]) {
-		  bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
-		  
-		} else {
-		  bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
-		}
-		
-		
+                Player *curPlayer = pongGame->players[clientIDs[i]];
+                Player *opponent = pongGame->getOpponent(curPlayer);
+                jsonToSend["phase"] = "opponent_paddle_update";
+                vector<int> opponentPaddle;
+                opponentPaddle = opponent->getPaddlePosition();
+                ostringstream oppPaddle;
+                oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
+                jsonToSend["opponent_paddle"] = oppPaddle.str();
+
+                //server.wsSend(clientIDs[i], writer.write(jsonToSend));
+                if (bufferC1->getID() == clientIDs[i]) {
+                    bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
+
+                } else {
+                    bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
+                }
+
+
             }
 
             // Only send score updates sometimes
@@ -151,7 +151,7 @@ void *GameLoop(void *arg) {
                     jsonToSend["opp_num_tries"] = opponent->getTries();
 
                     if (pongGame->getPlayerFromClientID(clientIDs[i]) == pongGame->playerOne) {
-		      bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
+                        bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
                     } else {
                         bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
                     }
@@ -259,25 +259,25 @@ bool stopThread(int clientID) {
     void *res;
     bool returnVal = true;
 
-    if(clientID == bufferC1->getID()){
-	// cancel client 1
-	bufferC1->stopThread();
-	s = pthread_join(clientOneThread, &res);
-	if (res != 0) {
-	  printf("WARNING: Joining message thread %d went wrong.\n", clientID);
-	  returnVal = false;
-	}
+    // cancel client 1
+    bufferC1->stopThread();
+    s = pthread_join(clientOneThread, &res);
+    if (s != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC1->clearReceiveBuffer();
+    bufferC1->clearSendBuffer();
 
-      } else {
-	// cancel client 2
-	bufferC2->stopThread();
-	s = pthread_join(clientTwoThread, &res);
-	if (res != 0) {
-	  printf("WARNING: Joining message thread %d went wrong.\n", clientID);
-	  returnVal = false;
-	}
-	
-      }
+    // cancel client 2
+    bufferC2->stopThread();
+    s = pthread_join(clientTwoThread, &res);
+    if (s != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC2->clearReceiveBuffer();
+    bufferC2->clearSendBuffer();
 
 
     return returnVal;
