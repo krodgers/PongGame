@@ -105,7 +105,6 @@ void *GameLoop(void *arg) {
                 json << x << ", " << y << "]}";
                 if (pongGame->getPlayerFromClientID(clientIDs[i]) == pongGame->playerOne) {
                     bufferC1->sendMessage(clientIDs[i], json.str());
-                    //    server.wsSend(clientIDs[i], json.str());
                 } else {
                     bufferC2->sendMessage(clientIDs[i], json.str());
 
@@ -123,11 +122,11 @@ void *GameLoop(void *arg) {
 		jsonToSend["opponent_paddle"] = oppPaddle.str();
 		
 		//server.wsSend(clientIDs[i], writer.write(jsonToSend));
-		if (pongGame->getPlayerFromClientID(clientIDs[i]) == pongGame->playerOne) {
-		  bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
+		if (bufferC1->getID()  == clientIDs[i]) {
+		  bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
 		  
 		} else {
-		  bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
+		  bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
 		}
 		
 		
@@ -260,23 +259,26 @@ bool stopThread(int clientID) {
     void *res;
     bool returnVal = true;
 
-    pthread_t threadToCancel = clientID = bufferC1->getID() ? clientOneThread : clientTwoThread;
+    if(clientID == bufferC1->getID()){
+	// cancel client 1
+	bufferC1->stopThread();
+	s = pthread_join(clientOneThread, &res);
+	if (res != 0) {
+	  printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+	  returnVal = false;
+	}
 
-//    if (clientID == bufferC1->getID())
-//        bufferC1->stopThread();
-//    else
-//        bufferC2->stopThread();
+      } else {
+	// cancel client 2
+	bufferC2->stopThread();
+	s = pthread_join(clientTwoThread, &res);
+	if (res != 0) {
+	  printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+	  returnVal = false;
+	}
+	
+      }
 
-    s = pthread_cancel(clientOneThread);
-    if (s != 0) {
-        printf("WARNING: Unable to cancel messageThread\n");
-        returnVal = false;
-    }
-    s = pthread_join(clientOneThread, &res);
-    if (res != 0) {
-        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
-        returnVal = false;
-    }
 
     return returnVal;
 

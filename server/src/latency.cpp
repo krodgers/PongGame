@@ -103,7 +103,7 @@ void Latency::receiveMessage(int clientID, std::string message) {
 void Latency::sendMessage(int clientID, std::string message) {
      while (messageLock);
      messageLock = 1;
-     sendBuffer->push(message);
+     sendBuffer->push(addTimestamp(message));
      sendIDs->push(clientID);
      messageLock = 0;
 }
@@ -159,7 +159,7 @@ void *Latency::messageHandlingLoop() {
 	       usleep(1000 * latencyTime);
 	       while (messageLock); // lock on send buffer
 	       messageLock = 1;
-	       server->wsSend(sendIDs->front(), addTimestamp(sendBuffer->front()));
+	       server->wsSend(sendIDs->front(), sendBuffer->front());
 	       sendIDs->pop();
 	       sendBuffer->pop();
 	       messageLock = 0;
