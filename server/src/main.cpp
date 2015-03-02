@@ -33,6 +33,9 @@ int serverThread;
 pthread_t clientOneThread;
 pthread_t clientTwoThread;
 int gameLoopThread;
+void sendBallPosition(int);
+void sendPaddleUpdate(int);
+void sendScoreUpdate(int);
 bool gameObjectsSet;
 webSocket server;
 pong *pongGame;
@@ -97,72 +100,88 @@ void *GameLoop(void *arg) {
 
             vector<int> clientIDs = server.getClientIDs();
             for (int i = 0; i < clientIDs.size(); i++) {
-                ostringstream json;
-                int x;
-                int y;
-                pongGame->getBallPosition((pongGame->getPlayerFromClientID(clientIDs[i]))->getName(), x, y);
-                json << "{\"phase\":\"ball_update\",\"ball_position\":[";
-                json << x << ", " << y << "]}";
-                if (pongGame->getPlayerFromClientID(clientIDs[i]) == pongGame->playerOne) {
-                    bufferC1->sendMessage(clientIDs[i], json.str());
-                } else {
-                    bufferC2->sendMessage(clientIDs[i], json.str());
-
-                }
-                // Send Paddle Updates
-                Json::FastWriter writer;
-                Json::Value jsonToSend;
-                Player *curPlayer = pongGame->players[clientIDs[i]];
-                Player *opponent = pongGame->getOpponent(curPlayer);
-                jsonToSend["phase"] = "opponent_paddle_update";
-                vector<int> opponentPaddle;
-                opponentPaddle = opponent->getPaddlePosition();
-                ostringstream oppPaddle;
-                oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
-                jsonToSend["opponent_paddle"] = oppPaddle.str();
-
-                //server.wsSend(clientIDs[i], writer.write(jsonToSend));
-                if (bufferC1->getID() == clientIDs[i]) {
-                    bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
-
-                } else {
-                    bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
-                }
-
-
+	      sendBallPosition(clientIDs[i]);
             }
 
             // Only send score updates sometimes
             if (scoreUpdateCounter % 2 == 0) {
+	      for (int i = 0; i < clientIDs.size(); i++) {
                 scoreUpdateCounter = 0;
-                Json::FastWriter writer;
-                Json::Value jsonToSend;
-                for (int i = 0; i < clientIDs.size(); i++) {
-                    Player *curPlayer = pongGame->players[clientIDs[i]];
-                    Player *opponent = pongGame->getOpponent(curPlayer);
-
-                    // Send scores
-                    // my scores
-                    jsonToSend.clear();
-                    jsonToSend["phase"] = "score_update";
-                    jsonToSend["new_score"] = curPlayer->getHits();
-                    jsonToSend["num_tries"] = curPlayer->getTries();
-                    jsonToSend["opp_new_score"] = opponent->getHits();
-                    jsonToSend["opp_num_tries"] = opponent->getTries();
-
-                    if (pongGame->getPlayerFromClientID(clientIDs[i]) == pongGame->playerOne) {
-                        bufferC1->sendMessage(clientIDs[i], writer.write(jsonToSend));
-                    } else {
-                        bufferC2->sendMessage(clientIDs[i], writer.write(jsonToSend));
-                    }
-                }
-
-            }
+		sendScoreUpdate(clientIDs[i]);
+	      }
+	    }
             scoreUpdateCounter++;
             usleep(1000000 / 60);
         }
     }
 }
+// Sends opponent's paddle update to client with clientID
+void sendPaddleUpdate(int clientID){
+  // Send Paddle Updates
+  Json::FastWriter writer;
+  Json::Value jsonToSend;
+  Player *curPlayer = pongGame->players[clientID];
+  Player *opponent = pongGame->getOpponent(curPlayer);
+  jsonToSend["phase"] = "opponent_paddle_update";
+  vector<int> opponentPaddle;
+  opponentPaddle = opponent->getPaddlePosition();
+  ostringstream oppPaddle;
+  oppPaddle << "[" << 984 << "," << opponentPaddle[1] << "]";
+  jsonToSend["opponent_paddle"] = oppPaddle.str();
+
+  if (bufferC1->getID() == clientID) {
+    bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+
+  } else {
+    bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+  }
+
+}
+
+
+// Sends score update to client
+ void sendScoreUpdate(int clientID){
+   Json::FastWriter writer;
+   Json::Value jsonToSend;
+   Player *curPlayer = pongGame->players[clientID];
+   Player *opponent = pongGame->getOpponent(curPlayer);
+   
+   // Send scores
+     // my scores
+   jsonToSend.clear();
+   jsonToSend["phase"] = "score_update";
+   jsonToSend["new_score"] = curPlayer->getHits();
+   jsonToSend["num_tries"] = curPlayer->getTries();
+   jsonToSend["opp_new_score"] = opponent->getHits();
+   jsonToSend["opp_num_tries"] = opponent->getTries();
+   
+   if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne) {
+     bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+   } else {
+     bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+   }
+   
+   
+ }
+
+// Sends the ball's position
+void sendBallPosition(int clientID){
+  ostringstream json;
+  int x;
+  int y;
+  pongGame->getBallPosition((pongGame->getPlayerFromClientID(clientID)->getName()), x, y);
+  json << "{\"phase\":\"ball_update\",\"ball_position\":[";
+  json << x << ", " << y << "]}";
+  if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne) {
+    bufferC1->sendMessage(clientID, json.str());
+  } else {
+    bufferC2->sendMessage(clientID, json.str());
+
+  }
+  sendPaddleUpdate(clientID);
+}
+
+
 
 void Server(int port) {
     server.setOpenHandler(openHandler);
