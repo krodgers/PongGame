@@ -1,3 +1,4 @@
+#include <cmath>
 #include "player.h"
 
 Player::Player() {
@@ -126,3 +127,4 @@ int Player::getPaddleWidth() {
 int Player::getPaddleHeight() {
     return paddle->height;
 }
+

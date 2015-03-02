@@ -25,11 +25,9 @@ class pong{
  public:
   double ballx, bally;
   int ballradius;
-
   int boardHeight, boardWidth;
   int score;
   int totalTries;
-  bool gameObjectSet;
 
   pong(int screenHeight, int screenWidth, int ballStartX, int ballStartY, int paddleStartX, int paddleStartY);
 

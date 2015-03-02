@@ -168,6 +168,7 @@ void  pong::update(int paddleDirection, int paddleY, double delTime){
 
 }
 
+// distance between ball and paddle
 double  pong::distance(){
   double res = (ballx - paddlex)*(ballx - paddlex);
   res +=  (bally - paddley)*(bally - paddley);

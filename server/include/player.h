@@ -86,6 +86,7 @@ public:
     void setPaddleDirection(int direction);
 
     int getPaddleDirection();
+  
 };
 
 #endif
