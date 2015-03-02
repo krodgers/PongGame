@@ -62,6 +62,14 @@ void Player::incrementTries() {
     this->tries++;
 }
 
+int Player::getAverageLatency() {
+    return this->averageLatency;
+}
+
+void Player::setAverageLatency(int latency) {
+    this->averageLatency = latency;
+}
+
 void Player::resetStats() {
     score = 0;
     hits = 0;

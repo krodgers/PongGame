@@ -44,6 +44,7 @@ private:
     void* messageReceivingLoop();
     void* messageSendingLoop();
     double clientLatency; // the latency from server to client
+    double averageClientLatency;
 
 public:
 

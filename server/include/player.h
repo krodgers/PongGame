@@ -32,6 +32,7 @@ private:
     int hits;
     int tries;
     string opponentName;
+    int averageLatency;
 
 public:
     Player();
@@ -65,6 +66,10 @@ public:
     void resetStats();
 
     void reset();
+
+    int getAverageLatency();
+
+    void setAverageLatency(int latency);
 
     // Paddle Stuff
     vector<int> getPaddlePosition();
