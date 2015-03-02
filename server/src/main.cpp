@@ -30,8 +30,10 @@ Kathryn Rodgers UCID: 39483825
 using namespace std;
 
 int serverThread;
-pthread_t clientOneThread;
-pthread_t clientTwoThread;
+pthread_t clientOneSendThread;
+pthread_t clientTwoSendThread;
+pthread_t clientOneRcvThread;
+pthread_t clientTwoRcvThread;
 int gameLoopThread;
 bool gameObjectsSet;
 webSocket server;
@@ -224,19 +226,20 @@ void openHandler(int clientID) {
         // Start up latency thread for the first client
         int res;
         bufferC1 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&clientOneThread, NULL, &bufferC1->threadWrapperFunction, bufferC1);
+        res = pthread_create(&clientOneSendThread, NULL, &bufferC1->startSendLoop, bufferC1);
+	res += pthread_create(&clientOneRcvThread, NULL, &bufferC1->startRcvLoop, bufferC1);
         if (res != 0) {
-            printf("WARNING:Message thread failed to create for client %d\n", clientID);
+	  printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
     } else {
         // Start up latency thread for second client
         int res;
         bufferC2 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&clientTwoThread, NULL, &bufferC2->threadWrapperFunction, bufferC2);
+        res = pthread_create(&clientTwoSendThread, NULL, &bufferC2->startSendLoop, bufferC2);
+	res += pthread_create(&clientTwoRcvThread, NULL, &bufferC2->startRcvLoop, bufferC2);
         if (res != 0) {
             printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
-
     }
 
     for (int i = 0; i < clientIDs.size(); i++) {
@@ -291,8 +294,8 @@ bool stopThread(int clientID) {
 
     // cancel client 1
     bufferC1->stopThread();
-    s = pthread_join(clientOneThread, &res);
-    if (s != 0) {
+    s = pthread_join(clientOneSendThread, &res);
+    if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
@@ -301,8 +304,8 @@ bool stopThread(int clientID) {
 
     // cancel client 2
     bufferC2->stopThread();
-    s = pthread_join(clientTwoThread, &res);
-    if (s != 0) {
+    s = pthread_join(clientTwoSendThread, &res);
+    if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }

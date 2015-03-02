@@ -148,13 +148,19 @@ double Latency::getReceiveLatency() {
      return clientLatency;
 }
 
-void *Latency::threadWrapperFunction(void *classRef) {
-     ((Latency *) classRef)->messageHandlingLoop();
+void *Latency::startSendLoop(void *classRef) {
+     ((Latency *) classRef)->messageSendingLoop();
+     
+}
+void *Latency::startRcvLoop(void *classRef) {
+     ((Latency *) classRef)->messageReceivingLoop();
+     
 }
 
 
 // thread routine to grab messages off the buffer and send them
-void *Latency::messageHandlingLoop() {
+void *Latency::messageSendingLoop() {
+     printf("%d: Starting Sending Loop\n", ID);
      sendAndReceive = true;
      int countS, countR = 0; // DELETE ME
      // allow the thread to be cancelled
@@ -174,11 +180,25 @@ void *Latency::messageHandlingLoop() {
 	       sendBuffer->pop();
 	       messageLock = 0;
 	       if(countS > 100){
-		    printf("%d: Send buffer size: %d\n",ID,  sendBuffer->size());
+		    printf("%d: Send buffer size: %d\n",ID, (int) sendBuffer->size());
 		    countS = 0;
 	       }
 	       countS++;
 	  }
+     }
+}
+// thread routine to grab messages off the buffer and send them
+void *Latency::messageReceivingLoop() {
+     printf("%d: Starting Rcving Loop\n", ID);
+     sendAndReceive = true;
+     int countS, countR = 0; // DELETE ME
+     // allow the thread to be cancelled
+     int s;
+     s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+     if (s != 0)
+	  printf("WARNING: Unable to set cancellation on message Thread\n");
+     // start sending and receiving
+     while (sendAndReceive) {
 	  if (!receiveBuffer->empty()) {
 	       int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
 	       usleep(1000 * r);
@@ -190,7 +210,7 @@ void *Latency::messageHandlingLoop() {
 	       receiveLock = 0;
 	       if(countR > 100){
 		    countR = 0;
-		    printf("%d: Receive buffer size: %d\n", ID, receiveBuffer->size());
+		    printf("%d: Receive buffer size: %d\n", ID,(int) receiveBuffer->size());
 	       }
 	       countR++;
 	  }
@@ -220,7 +240,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 
      clientLatency += (currMillis - timeStamp);
      totalNumPackets += 1;
-     printf("Client %d Packet Latency: %d\n", ID, currMillis - timeStamp);
+     printf("Client %d Packet Latency: %d\n", ID,(int)( currMillis - timeStamp));
      printf("Total average Latency: %.4g\n", clientLatency/totalNumPackets);
      if (phaseString.compare("initial_dimensions") == 0) {
 

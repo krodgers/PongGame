@@ -41,8 +41,8 @@ private:
 
     // thread routine to grab messages off the buffer and send them
     // or process incoming messages
-    void *messageHandlingLoop();
-
+    void* messageReceivingLoop();
+    void* messageSendingLoop();
     double clientLatency; // the latency from server to client
 
 public:
@@ -57,8 +57,8 @@ public:
 
     void stopThread();
 
-    static void *threadWrapperFunction(void *classRef);
-
+    static void *startSendLoop(void *classRef);
+    static void *startRcvLoop(void *classRef);
     // Start the message sending/receiving thread
     void setPongGame(pong *game);
 
