@@ -172,9 +172,17 @@ void *Latency::messageSendingLoop() {
      while (sendAndReceive) {
 	  if (!sendBuffer->empty()) {
 	       int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
-	       usleep(1000 * r);
+          Player* curPlayer = pongGame->getPlayerFromClientID(this->ID);
+          Player* opponent = pongGame->getOpponent(curPlayer);
+          if (totalNumPackets > 20 && opponent->getAverageLatency() > curPlayer->getAverageLatency()) {
+              cout << "Difference between " << curPlayer->getName() << "'s latency and " << opponent->getName() <<
+                      "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
+              r += opponent->getAverageLatency() - curPlayer->getAverageLatency();
+          }
+           usleep(1000 * r);
 	       while (messageLock); // lock on send buffer
 	       messageLock = 1;
+          cout << "Send buffer size: " << sendBuffer->size() << endl;
 	       server->wsSend(sendIDs->front(), sendBuffer->front());
 	       sendIDs->pop();
 	       sendBuffer->pop();
@@ -205,7 +213,8 @@ void *Latency::messageReceivingLoop() {
 	       while (receiveLock); // lock on receive buffer
 	       receiveLock = 1;
 	       handleIncomingMessage(receiveIDs->front(), receiveBuffer->front());
-	       receiveIDs->pop();
+          cout << "Recv buffer size: " << receiveBuffer->size() << endl;
+          receiveIDs->pop();
 	       receiveBuffer->pop();
 	       receiveLock = 0;
 	       if(countR > 100){
