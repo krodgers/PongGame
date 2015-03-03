@@ -323,6 +323,7 @@ void Latency::sendBufferMessage() {
             }
 
         }
+    messageLock = 0;
 
 
 
