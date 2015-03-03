@@ -47,9 +47,7 @@ private:
     // thread routine to grab messages off the buffer and send them
     // or process incoming messages
     void* messageReceivingLoop();
-    void* ballSendingLoop();
-    void* paddleSendingLoop();
-    void* scoreSendingLoop();
+    void* sendingLoop();
     double clientLatency; // the latency from server to client
     double averageClientLatency;
 
@@ -67,9 +65,7 @@ public:
 
     void stopThread();
 
-    static void *startSendBallLoop(void *classRef);
-    static void *startSendPaddleLoop(void *classRef);
-    static void *startSendScoreLoop(void *classRef);
+    static void *startSendLoop(void *classRef);
     static void *startRcvLoop(void *classRef);
     // Start the message sending/receiving thread
     void setPongGame(pong *game);
@@ -89,7 +85,7 @@ public:
     void clearSendPaddleBuffer();
     void clearSendScoreBuffer();
 
-    void sendBufferMessage(queue<std::string>* sendBuffer, queue<int>* sendIDs);
+    void sendBufferMessage();
 
     queue<std::string>* getSendBuffer(PacketType type);
     queue<int>* getSendIDs(PacketType type);
