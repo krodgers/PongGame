@@ -304,8 +304,11 @@ bool stopThread(int clientID) {
     void *res;
     bool returnVal = true;
 
-    // cancel client 1
+    // cancel clients 
     bufferC1->stopThread();
+    bufferC2->stopThread();
+   
+    // reap client 1 threads
     s = pthread_join(clientOneSendBallThread, &res);
     if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
@@ -327,8 +330,7 @@ bool stopThread(int clientID) {
     bufferC1->clearReceiveBuffer();
 
 
-    // cancel client 2
-    bufferC2->stopThread();
+    // reap client 2 threads
     s = pthread_join(clientTwoSendBallThread, &res);
     if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
