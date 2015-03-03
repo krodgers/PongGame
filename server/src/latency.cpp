@@ -17,7 +17,7 @@ extern bool gameObjectsSet;
 
 #define LATENCY_TIME_MIN 50
 #define LATENCY_TIME_MAX 100
-#define MAX_ALLOWED_DELAY 500
+#define MAX_ALLOWED_DELAY 1500
 
 
 // Latency Constructors
@@ -208,9 +208,12 @@ void Latency::sendMessage(int clientID, std::string message, PacketType type) {
     queue<std::string> *sendBuffer = getSendBuffer(type);
     queue<int> *sendIDs = getSendIDs(type);
     /* Do stuff for checking max buffer size and whatnot */
-//     cout << "Send buffer size in send message: " << sendBuffer->size() << endl;
+//    cout << "Send buffer size in send message: " << sendBuffer->size() << endl;
+//    cout << "game objects set: " << gameObjectsSet << endl;
+//    cout << "condtion for buffer too large is: " << (sendBuffer->size() > (double) MAX_ALLOWED_DELAY / (double) (pongGame->getPlayerFromClientID(this->ID))->getAverageLatency()) << endl;
     if (gameObjectsSet && sendBuffer->size() > (double) MAX_ALLOWED_DELAY / (double) (pongGame->getPlayerFromClientID(this->ID))->getAverageLatency()) {
         messageLock = 0; // unlock so clearing buffer can lock
+        cout << "buffer too large" << endl;
         this->clearSendBuffer(type);
     } else {
         messageLock = 0; // unlock to avoid deadlock
@@ -218,6 +221,7 @@ void Latency::sendMessage(int clientID, std::string message, PacketType type) {
     }
     while (messageLock);
     messageLock = 1;
+    cout << "Pushing a packet" << endl;
     sendBuffer->push(addTimestamp(message));
     sendIDs->push(clientID);
     messageLock = 0;
@@ -277,32 +281,50 @@ void Latency::sendBufferMessage() {
                 //        "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
                 r += opponent->getAverageLatency() - curPlayer->getAverageLatency();
             }
+            messageLock = 0;
 
-            usleep(1000 * r);
+
 
             //cout << "Send buffer size: " << sendBuffer->size() << endl;
 
             if (sendBallBuffer->size() > 0) {
+
+                usleep(1000 * r);
+                while (messageLock);
+                messageLock = 1;
                 server->wsSend(sendBallIDs->front(), sendBallBuffer->front());
                 sendBallIDs->pop();
                 sendBallBuffer->pop();
+                messageLock = 0;
             }
 
+
+
             if (sendPaddleBuffer->size() > 0) {
+                usleep(1000 * r);
+                while (messageLock);
+                messageLock = 1;
                 server->wsSend(sendPaddleIDs->front(), sendPaddleBuffer->front());
                 sendPaddleIDs->pop();
                 sendPaddleBuffer->pop();
+                messageLock = 0;
             }
 
+
+
             if (sendScoreBuffer->size() > 0) {
+                usleep(1000 * r);
+                while (messageLock);
+                messageLock = 1;
                 server->wsSend(sendScoreIDs->front(), sendScoreBuffer->front());
                 sendScoreIDs->pop();
                 sendScoreBuffer->pop();
+                messageLock = 0;
             }
 
         }
 
-        messageLock = 0;
+
 
 }
 
@@ -525,6 +547,9 @@ void Latency::stopThread() {
 }
 
 void Latency::printBufferInfo() {
+    cout << "Buffers for client: " << this->ID << endl;
+    cout << "---------------------" << endl;
+
     cout << "Ball buffer:" << endl;
     cout << "\taddress: " << &sendBallBuffer << endl;
     cout << "\tsize: " << sendBallBuffer->size() << endl;
