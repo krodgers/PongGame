@@ -30,8 +30,12 @@ Kathryn Rodgers UCID: 39483825
 using namespace std;
 
 int serverThread;
-pthread_t clientOneSendThread;
-pthread_t clientTwoSendThread;
+pthread_t clientOneSendBallThread;
+pthread_t clientOneSendPaddleThread;
+pthread_t clientOneSendScoreThread;
+pthread_t clientTwoSendBallThread;
+pthread_t clientTwoSendPaddleThread;
+pthread_t clientTwoSendScoreThread;
 pthread_t clientOneRcvThread;
 pthread_t clientTwoRcvThread;
 int gameLoopThread;
@@ -42,6 +46,7 @@ int loopCount;
 Latency *bufferC1; // buffer for Client 1
 Latency *bufferC2; // buffer for Client 2
 extern int paddleDistanceThreshold; // how far away ball is from paddle to send message
+
 
 void Server(int);
 
@@ -104,6 +109,7 @@ void *GameLoop(void *arg) {
         if (gameObjectsSet == true) {
             pongGame->update(1 / 60.0);
 
+
             vector<int> clientIDs = server.getClientIDs();
             for (int i = 0; i < clientIDs.size(); i++) {
                 sendBallPosition(clientIDs[i], currBallX, currBallY);
@@ -140,10 +146,10 @@ void sendPaddleUpdate(int clientID, int ballx, int bally) {
         jsonToSend["opponent_paddle"] = oppPaddle.str();
 
         if (bufferC1->getID() == clientID) {
-            bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+            bufferC2->sendMessage(clientID, writer.write(jsonToSend), Latency::PADDLE);
 
         } else {
-            bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+            bufferC1->sendMessage(clientID, writer.write(jsonToSend), Latency::PADDLE);
         }
     }
 
@@ -167,9 +173,9 @@ void sendScoreUpdate(int clientID) {
     jsonToSend["opp_num_tries"] = opponent->getTries();
 
     if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne) {
-        bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+        bufferC1->sendMessage(clientID, writer.write(jsonToSend), Latency::SCORE);
     } else {
-        bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+        bufferC2->sendMessage(clientID, writer.write(jsonToSend), Latency::SCORE);
     }
 
 
@@ -185,11 +191,12 @@ void sendBallPosition(int clientID, int &outx, int &outy) {
     json << "{\"phase\":\"ball_update\",\"ball_position\":[";
     json << x << ", " << y << "]}";
     if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne) {
-        bufferC1->sendMessage(clientID, json.str());
+        bufferC1->sendMessage(clientID, json.str(), Latency::BALL);
     } else {
-        bufferC2->sendMessage(clientID, json.str());
+        bufferC2->sendMessage(clientID, json.str(), Latency::BALL);
 
     }
+
 
     outx = x;
     outy = y;
@@ -226,17 +233,22 @@ void openHandler(int clientID) {
         // Start up latency thread for the first client
         int res;
         bufferC1 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&clientOneSendThread, NULL, &bufferC1->startSendLoop, bufferC1);
-	res += pthread_create(&clientOneRcvThread, NULL, &bufferC1->startRcvLoop, bufferC1);
+
+        res = pthread_create(&clientOneRcvThread, NULL, &bufferC1->startRcvLoop, bufferC1);
         if (res != 0) {
-	  printf("WARNING:Message thread failed to create for client %d\n", clientID);
+            printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
     } else {
         // Start up latency thread for second client
         int res;
         bufferC2 = new Latency(pongGame, &server, clientID);
-        res = pthread_create(&clientTwoSendThread, NULL, &bufferC2->startSendLoop, bufferC2);
-	res += pthread_create(&clientTwoRcvThread, NULL, &bufferC2->startRcvLoop, bufferC2);
+        res = pthread_create(&clientOneSendBallThread, NULL, &bufferC1->startSendBallLoop, bufferC1);
+        res += pthread_create(&clientOneSendPaddleThread, NULL, &bufferC1->startSendPaddleLoop, bufferC1);
+        res += pthread_create(&clientOneSendScoreThread, NULL, &bufferC1->startSendScoreLoop, bufferC1);
+        res += pthread_create(&clientTwoSendBallThread, NULL, &bufferC2->startSendBallLoop, bufferC2);
+        res += pthread_create(&clientTwoSendPaddleThread, NULL, &bufferC2->startSendPaddleLoop, bufferC2);
+        res += pthread_create(&clientTwoSendScoreThread, NULL, &bufferC2->startSendScoreLoop, bufferC2);
+        res += pthread_create(&clientTwoRcvThread, NULL, &bufferC2->startRcvLoop, bufferC2);
         if (res != 0) {
             printf("WARNING:Message thread failed to create for client %d\n", clientID);
         }
@@ -259,10 +271,10 @@ void openHandler(int clientID) {
 
     //  server.wsSend(clientID, writer.write(jsonToSend));
     if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne) {
-        bufferC1->sendMessage(clientID, writer.write(jsonToSend));
+        bufferC1->sendAdministrativeMessage(clientID, writer.write(jsonToSend));
 
     } else {
-        bufferC2->sendMessage(clientID, writer.write(jsonToSend));
+        bufferC2->sendAdministrativeMessage(clientID, writer.write(jsonToSend));
     }
 
 }
@@ -294,23 +306,49 @@ bool stopThread(int clientID) {
 
     // cancel client 1
     bufferC1->stopThread();
-    s = pthread_join(clientOneSendThread, &res);
+    s = pthread_join(clientOneSendBallThread, &res);
     if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
+    bufferC1->clearSendBuffer(Latency::BALL);
+    s = pthread_join(clientOneSendPaddleThread, &res);
+    if (res != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC1->clearSendBuffer(Latency::PADDLE);
+    s = pthread_join(clientOneSendScoreThread, &res);
+    if (res != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC1->clearSendBuffer(Latency::SCORE);
     bufferC1->clearReceiveBuffer();
-    bufferC1->clearSendBuffer();
+
 
     // cancel client 2
     bufferC2->stopThread();
-    s = pthread_join(clientTwoSendThread, &res);
+    s = pthread_join(clientTwoSendBallThread, &res);
     if (res != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
+    bufferC2->clearSendBuffer(Latency::BALL);
+    s = pthread_join(clientTwoSendPaddleThread, &res);
+    if (res != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC2->clearSendBuffer(Latency::PADDLE);
+    s = pthread_join(clientTwoSendScoreThread, &res);
+    if (res != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
+    bufferC2->clearSendBuffer(Latency::SCORE);
     bufferC2->clearReceiveBuffer();
-    bufferC2->clearSendBuffer();
+
 
 
     return returnVal;

@@ -23,8 +23,12 @@ private:
 
     int ID; // to identify which client this buffer is associated with
     int totalNumPackets;
-    std::queue<std::string> *sendBuffer;
-    std::queue<int> *sendIDs;
+    std::queue<std::string> *sendBallBuffer;
+    std::queue<std::string> *sendPaddleBuffer;
+    std::queue<std::string> *sendScoreBuffer;
+    std::queue<int> *sendBallIDs;
+    std::queue<int> *sendPaddleIDs;
+    std::queue<int> *sendScoreIDs;
     std::queue<int> *receiveIDs;
     std::queue<std::string> *receiveBuffer;
     int latencyTimeMax; // in millisecond
@@ -33,7 +37,8 @@ private:
     webSocket *server;
     bool sendAndReceive;
     int messageThread;
-    int messageLock, receiveLock;
+    int messageLock, receiveLock, sendLock;
+
 
     void init(); // allocate all the memory things
     // deals with message server gets from client
@@ -42,11 +47,15 @@ private:
     // thread routine to grab messages off the buffer and send them
     // or process incoming messages
     void* messageReceivingLoop();
-    void* messageSendingLoop();
+    void* ballSendingLoop();
+    void* paddleSendingLoop();
+    void* scoreSendingLoop();
     double clientLatency; // the latency from server to client
     double averageClientLatency;
 
 public:
+
+    enum PacketType { BALL, PADDLE, SCORE };
 
     Latency(pong *game, webSocket *serverToUse, int id);
 
@@ -58,7 +67,9 @@ public:
 
     void stopThread();
 
-    static void *startSendLoop(void *classRef);
+    static void *startSendBallLoop(void *classRef);
+    static void *startSendPaddleLoop(void *classRef);
+    static void *startSendScoreLoop(void *classRef);
     static void *startRcvLoop(void *classRef);
     // Start the message sending/receiving thread
     void setPongGame(pong *game);
@@ -66,12 +77,22 @@ public:
     // called when server gets message
     void receiveMessage(int clientID, std::string message);
 
-    void sendMessage(int clientIDToSendTo, std::string message);
+    void sendMessage(int clientIDToSendTo, std::string message, PacketType type);
+    void sendAdministrativeMessage(int clientID, string message);
 
     std::string addTimestamp(std::string message); // adds timestamp to message and returns stamped message
     double getReceiveLatency();
 
-    void clearSendBuffer();
+    void clearSendBuffer(PacketType type);
+
+    void clearSendBallBuffer();
+    void clearSendPaddleBuffer();
+    void clearSendScoreBuffer();
+
+    void sendBufferMessage(queue<std::string>* sendBuffer, queue<int>* sendIDs);
+
+    queue<std::string>* getSendBuffer(PacketType type);
+    queue<int>* getSendIDs(PacketType type);
 
     void clearReceiveBuffer();
 

@@ -17,6 +17,7 @@ extern bool gameObjectsSet;
 
 #define LATENCY_TIME_MIN 50
 #define LATENCY_TIME_MAX 100
+#define MAX_ALLOWED_DELAY 1000
 
 
 // Latency Constructors
@@ -42,12 +43,20 @@ Latency::Latency(webSocket *serverToUse, int id) {
 
 // Frees all the memory objects
 Latency::~Latency() {
-    if (sendBuffer != NULL)
-        delete sendBuffer;
+    if (sendBallBuffer != NULL)
+        delete sendBallBuffer;
+    if (sendPaddleBuffer != NULL)
+        delete sendPaddleBuffer;
+    if (sendScoreBuffer != NULL)
+        delete sendScoreBuffer;
     if (receiveBuffer != NULL)
         delete receiveBuffer;
-    if (sendIDs != NULL)
-        delete sendIDs;
+    if (sendBallIDs != NULL)
+        delete sendBallIDs;
+    if (sendPaddleIDs != NULL)
+        delete sendPaddleIDs;
+    if (sendScoreIDs != NULL)
+        delete sendScoreIDs;
     if (receiveIDs)
         delete receiveIDs;
 
@@ -55,9 +64,13 @@ Latency::~Latency() {
 
 // Initializes the memory objects
 void Latency::init() {
-    sendBuffer = new std::queue<std::string>;
+    sendBallBuffer = new std::queue<std::string>;
+    sendPaddleBuffer = new std::queue<std::string>;
+    sendScoreBuffer = new std::queue<std::string>;
     receiveBuffer = new std::queue<std::string>;
-    sendIDs = new std::queue<int>();
+    sendBallIDs = new std::queue<int>();
+    sendPaddleIDs = new std::queue<int>();
+    sendScoreIDs = new std::queue<int>();
     receiveIDs = new std::queue<int>();
     sendAndReceive = false;
     messageLock = 0;
@@ -76,13 +89,49 @@ void Latency::setPongGame(pong *game) {
 }
 
 // Clears out the send buffer
-void Latency::clearSendBuffer() {
+void Latency::clearSendBuffer(PacketType type) {
+    switch (type) {
+        case BALL:
+            clearSendBallBuffer();
+        case PADDLE:
+            clearSendPaddleBuffer();
+        case SCORE:
+            clearSendScoreBuffer();
+        default:
+            return;
+    }
+}
+
+// Clears out the send ball buffer
+void Latency::clearSendBallBuffer() {
     while (messageLock);
     messageLock = 1;
-    delete sendBuffer;
-    delete sendIDs;
-    sendBuffer = new std::queue<std::string>;
-    sendIDs = new std::queue<int>;
+    delete sendBallBuffer;
+    delete sendBallIDs;
+    sendBallBuffer = new std::queue<std::string>;
+    sendBallIDs = new std::queue<int>;
+    messageLock = 0;
+}
+
+// Clears out the send paddle buffer
+void Latency::clearSendPaddleBuffer() {
+    while (messageLock);
+    messageLock = 1;
+    delete sendPaddleBuffer;
+    delete sendPaddleIDs;
+    sendPaddleBuffer = new std::queue<std::string>;
+    sendPaddleIDs = new std::queue<int>;
+    messageLock = 0;
+}
+
+// Clears out the send score buffer
+void Latency::clearSendScoreBuffer() {
+    while (messageLock);
+    messageLock = 1;
+    delete sendScoreBuffer;
+    delete sendScoreIDs;
+    sendScoreBuffer = new std::queue<std::string>;
+    sendScoreIDs = new std::queue<int>;
     messageLock = 0;
 }
 
@@ -107,10 +156,44 @@ void Latency::receiveMessage(int clientID, std::string message) {
     receiveLock = 0;
 }
 
+queue<std::string> *Latency::getSendBuffer(PacketType type) {
+    switch (type) {
+        case BALL:
+            return sendBallBuffer;
+        case PADDLE:
+            return sendPaddleBuffer;
+        case SCORE:
+            return sendScoreBuffer;
+        default:
+            return sendBallBuffer;
+    }
+}
+
+queue<int> *Latency::getSendIDs(PacketType type) {
+    switch (type) {
+        case BALL:
+            return sendBallIDs;
+        case PADDLE:
+            return sendPaddleIDs;
+        case SCORE:
+            return sendScoreIDs;
+        default:
+            return sendBallIDs;
+    }
+}
+
 // add message to send queue
 // will send after some Latency time
-void Latency::sendMessage(int clientID, std::string message) {
+void Latency::sendMessage(int clientID, std::string message, PacketType type) {
     while (messageLock);
+
+    queue<std::string> *sendBuffer = getSendBuffer(type);
+    queue<int> *sendIDs = getSendIDs(type);
+    /* Do stuff for checking max buffer size and whatnot */
+    cout << "Send buffer size in send message: " << sendBuffer->size() << endl;
+    if (gameObjectsSet && sendBuffer->size() > (double) MAX_ALLOWED_DELAY / (double) (pongGame->getPlayerFromClientID(this->ID))->getAverageLatency()) {
+        this->clearSendBuffer(type);
+    }
     messageLock = 1;
     sendBuffer->push(addTimestamp(message));
     sendIDs->push(clientID);
@@ -148,83 +231,126 @@ double Latency::getReceiveLatency() {
     return clientLatency;
 }
 
-void *Latency::startSendLoop(void *classRef) {
-     ((Latency *) classRef)->messageSendingLoop();
-     
-}
-void *Latency::startRcvLoop(void *classRef) {
-     ((Latency *) classRef)->messageReceivingLoop();
-     
+void *Latency::startSendBallLoop(void *classRef) {
+    ((Latency *) classRef)->ballSendingLoop();
 }
 
+void *Latency::startSendPaddleLoop(void *classRef) {
+    ((Latency *) classRef)->paddleSendingLoop();
+}
+
+void *Latency::startSendScoreLoop(void *classRef) {
+    ((Latency *) classRef)->scoreSendingLoop();
+}
+
+
+void *Latency::startRcvLoop(void *classRef) {
+    ((Latency *) classRef)->messageReceivingLoop();
+
+}
+
+void Latency::sendBufferMessage(queue<std::string> *sendBuffer, queue<int> *sendIDs) {
+    if (!sendBuffer->empty()) {
+        int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
+        Player *curPlayer = pongGame->getPlayerFromClientID(this->ID);
+        Player *opponent = pongGame->getOpponent(curPlayer);
+        if (totalNumPackets > 20 && opponent->getAverageLatency() > curPlayer->getAverageLatency()) {
+            //cout << "Difference between " << curPlayer->getName() << "'s latency and " << opponent->getName() <<
+            //        "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
+            r += opponent->getAverageLatency() - curPlayer->getAverageLatency();
+        }
+        usleep(1000 * r);
+        while (messageLock); // lock on send buffer
+        messageLock = 1;
+        //cout << "Send buffer size: " << sendBuffer->size() << endl;
+        server->wsSend(sendIDs->front(), sendBuffer->front());
+        sendIDs->pop();
+        sendBuffer->pop();
+        messageLock = 0;
+    }
+}
+
+void Latency::sendAdministrativeMessage(int clientID, string message) {
+    int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
+    string lateMessage = addTimestamp(message);
+    usleep(1000 * r);
+    server->wsSend(clientID, lateMessage);
+
+}
 
 // thread routine to grab messages off the buffer and send them
-void *Latency::messageSendingLoop() {
-     printf("%d: Starting Sending Loop\n", ID);
-     sendAndReceive = true;
-     int countS, countR = 0; // DELETE ME
-     // allow the thread to be cancelled
-     int s;
-     s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-     if (s != 0)
-	  printf("WARNING: Unable to set cancellation on message Thread\n");
-     // start sending and receiving
-     while (sendAndReceive) {
-	  if (!sendBuffer->empty()) {
-	       int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
-          Player* curPlayer = pongGame->getPlayerFromClientID(this->ID);
-          Player* opponent = pongGame->getOpponent(curPlayer);
-          if (totalNumPackets > 20 && opponent->getAverageLatency() > curPlayer->getAverageLatency()) {
-              cout << "Difference between " << curPlayer->getName() << "'s latency and " << opponent->getName() <<
-                      "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
-              r += opponent->getAverageLatency() - curPlayer->getAverageLatency();
-          }
-           usleep(1000 * r);
-	       while (messageLock); // lock on send buffer
-	       messageLock = 1;
-          cout << "Send buffer size: " << sendBuffer->size() << endl;
-	       server->wsSend(sendIDs->front(), sendBuffer->front());
-	       sendIDs->pop();
-	       sendBuffer->pop();
-	       messageLock = 0;
-	       if(countS > 100){
-		    printf("%d: Send buffer size: %d\n",ID, (int) sendBuffer->size());
-		    countS = 0;
-	       }
-	       countS++;
-	  }
-     }
+void *Latency::ballSendingLoop() {
+    printf("%d: Starting Sending Loop\n", ID);
+    sendAndReceive = true;
+    int s;
+    s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0)
+        printf("WARNING: Unable to set cancellation on message Thread\n");
+    // start sending and receiving
+    while (sendAndReceive) {
+        sendBufferMessage(sendBallBuffer, sendBallIDs);
+    }
 }
+
+// thread routine to grab messages off the buffer and send them
+void *Latency::paddleSendingLoop() {
+    printf("%d: Starting Sending Loop\n", ID);
+    sendAndReceive = true;
+    int s;
+    s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0)
+        printf("WARNING: Unable to set cancellation on message Thread\n");
+    // start sending and receiving
+    while (sendAndReceive) {
+        sendBufferMessage(sendPaddleBuffer, sendPaddleIDs);
+    }
+}
+
+// thread routine to grab messages off the buffer and send them
+void *Latency::scoreSendingLoop() {
+    printf("%d: Starting Sending Loop\n", ID);
+    sendAndReceive = true;
+    int s;
+    s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0)
+        printf("WARNING: Unable to set cancellation on message Thread\n");
+    // start sending and receiving
+    while (sendAndReceive) {
+        sendBufferMessage(sendScoreBuffer, sendScoreIDs);
+    }
+}
+
+
 // thread routine to grab messages off the buffer and send them
 void *Latency::messageReceivingLoop() {
-     printf("%d: Starting Rcving Loop\n", ID);
-     sendAndReceive = true;
-     int countS, countR = 0; // DELETE ME
-     // allow the thread to be cancelled
-     int s;
-     s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-     if (s != 0)
-	  printf("WARNING: Unable to set cancellation on message Thread\n");
-     // start sending and receiving
-     while (sendAndReceive) {
-	  if (!receiveBuffer->empty()) {
-	       int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
-	       usleep(1000 * r);
-	       while (receiveLock); // lock on receive buffer
-	       receiveLock = 1;
-	       handleIncomingMessage(receiveIDs->front(), receiveBuffer->front());
-          cout << "Recv buffer size: " << receiveBuffer->size() << endl;
-          receiveIDs->pop();
-	       receiveBuffer->pop();
-	       receiveLock = 0;
-	       if(countR > 100){
-		    countR = 0;
-		    printf("%d: Receive buffer size: %d\n", ID,(int) receiveBuffer->size());
-	       }
-	       countR++;
-	  }
+    printf("%d: Starting Rcving Loop\n", ID);
+    sendAndReceive = true;
+    int countS, countR = 0; // DELETE ME
+    // allow the thread to be cancelled
+    int s;
+    s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0)
+        printf("WARNING: Unable to set cancellation on message Thread\n");
+    // start sending and receiving
+    while (sendAndReceive) {
+        if (!receiveBuffer->empty()) {
+            int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
+            usleep(1000 * r);
+            while (receiveLock); // lock on receive buffer
+            receiveLock = 1;
+            handleIncomingMessage(receiveIDs->front(), receiveBuffer->front());
+            cout << "Recv buffer size: " << receiveBuffer->size() << endl;
+            receiveIDs->pop();
+            receiveBuffer->pop();
+            receiveLock = 0;
+            if (countR > 100) {
+                countR = 0;
+                printf("%d: Receive buffer size: %d\n", ID, (int) receiveBuffer->size());
+            }
+            countR++;
+        }
 
-     }
+    }
 }
 
 // Processes the incoming message
@@ -291,13 +417,13 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         json << pongGame->ballx << ", " << pongGame->bally << "],";
         json << "\"ball_size\":" << ballRadius << "}";
 
-        sendMessage(clientID, json.str());
+        sendAdministrativeMessage(clientID, json.str());
 
     } else if (phaseString.compare("ready_to_start") == 0) {
         cout << "Client " << clientID << " ready_to_start" << endl;
 
         // send request for player's information
-        sendMessage(clientID, "{\"phase\":\"send_info\"}");
+        sendAdministrativeMessage(clientID, "{\"phase\":\"send_info\"}");
         const Json::Value ballPosJson = root["ball_position"];
         vector<int> ballPos(ballPosJson.size());
 
@@ -321,23 +447,23 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
             // Send the opponent name to the first player to connect
             jsonToSend["phase"] = "set_opponent";
             jsonToSend["name"] = playerName;
-            sendMessage(pongGame->playerOne->getAssignedClientID(), writer.write(jsonToSend));
+            sendAdministrativeMessage(pongGame->playerOne->getAssignedClientID(), writer.write(jsonToSend));
             // Send the opponent name to the second player to connect
             jsonToSend.clear();
             jsonToSend["phase"] = "set_opponent";
             jsonToSend["name"] = opponent->getName();
-            sendMessage(pongGame->playerTwo->getAssignedClientID(), writer.write(jsonToSend));
+            sendAdministrativeMessage(pongGame->playerTwo->getAssignedClientID(), writer.write(jsonToSend));
 
             // Tell the first player to connect to start
-            sendMessage(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
+            sendAdministrativeMessage(pongGame->playerOne->getAssignedClientID(), "{\"phase\":\"start\"}");
 
             // Tell the second player to connect to start
-            sendMessage(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
+            sendAdministrativeMessage(pongGame->playerTwo->getAssignedClientID(), "{\"phase\":\"start\"}");
             gameObjectsSet = true; // TODO:: clients need to use same object
 
         } else {
             // send wait signal
-            sendMessage(clientID, "{\"phase\":\"wait\"}");
+            sendAdministrativeMessage(clientID, "{\"phase\":\"wait\"}");
         }
 
 
@@ -377,7 +503,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         if (partnerID != -1) {
             // has partner
             jsonToSend["phase"] = "disconnected";
-            sendMessage(partnerID, writer.write(jsonToSend));
+            sendAdministrativeMessage(partnerID, writer.write(jsonToSend));
 
         }
         gameObjectsSet = false;
