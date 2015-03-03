@@ -36,7 +36,7 @@ twoPlayerPong.o: ../src/twoPlayerPong.cpp
 pong.o: ../src/pong.cpp
 	g++ -g -c -I../include ../src/pong.cpp
 latency.o: ../src/latency.cpp
-	g++ -g -c -I../include -D__linux__ ../src/latency.cpp
+	g++ -g -std=c++11 -c -I../include -D__linux__ ../src/latency.cpp
 sha1.o: ../src/sha1.cpp
 	g++ -c -I../include ../src/sha1.cpp
 
