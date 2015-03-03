@@ -309,20 +309,25 @@ bool stopThread(int clientID) {
     bufferC2->stopThread();
    
     // reap client 1 threads
+    s = pthread_join(clientOneRcvThread, &res);
+    if (s != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
     s = pthread_join(clientOneSendBallThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
     bufferC1->clearSendBuffer(Latency::BALL);
     s = pthread_join(clientOneSendPaddleThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
     bufferC1->clearSendBuffer(Latency::PADDLE);
     s = pthread_join(clientOneSendScoreThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
@@ -331,20 +336,25 @@ bool stopThread(int clientID) {
 
 
     // reap client 2 threads
+    s = pthread_join(clientTwoRcvThread, &res);
+    if (s != 0) {
+        printf("WARNING: Joining message thread %d went wrong.\n", clientID);
+        returnVal = false;
+    }
     s = pthread_join(clientTwoSendBallThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
     bufferC2->clearSendBuffer(Latency::BALL);
     s = pthread_join(clientTwoSendPaddleThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }
     bufferC2->clearSendBuffer(Latency::PADDLE);
     s = pthread_join(clientTwoSendScoreThread, &res);
-    if (res != 0) {
+    if (s != 0) {
         printf("WARNING: Joining message thread %d went wrong.\n", clientID);
         returnVal = false;
     }

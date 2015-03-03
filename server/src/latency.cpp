@@ -64,14 +64,14 @@ Latency::~Latency() {
 
 // Initializes the memory objects
 void Latency::init() {
-	  sendBallBuffer = new std::queue<std::string>();
-	  sendPaddleBuffer = new std::queue<std::string>();
-	  sendScoreBuffer = new std::queue<std::string>();
-	  receiveBuffer = new std::queue<std::string>();
-	  sendBallIDs = new std::queue<int>();
-	  sendPaddleIDs = new std::queue<int>();
-	  sendScoreIDs = new std::queue<int>();
-	  receiveIDs = new std::queue<int>();
+     sendBallBuffer = new std::queue<std::string>();
+     sendPaddleBuffer = new std::queue<std::string>();
+     sendScoreBuffer = new std::queue<std::string>();
+     receiveBuffer = new std::queue<std::string>();
+     sendBallIDs = new std::queue<int>();
+     sendPaddleIDs = new std::queue<int>();
+     sendScoreIDs = new std::queue<int>();
+     receiveIDs = new std::queue<int>();
      sendAndReceive = false;
      messageLock = 0;
      clientLatency = 0;
@@ -125,8 +125,8 @@ void Latency::clearSendPaddleBuffer() {
      delete sendPaddleBuffer;
      delete sendPaddleIDs;
      printf("clearSendPaddleBuffer\n");
-	  sendPaddleBuffer = new std::queue<std::string>();
-	  sendPaddleIDs = new std::queue<int>();
+     sendPaddleBuffer = new std::queue<std::string>();
+     sendPaddleIDs = new std::queue<int>();
 
      messageLock = 0;
 }
@@ -158,8 +158,8 @@ void Latency::clearReceiveBuffer() {
      delete receiveBuffer;
      delete receiveIDs;
      printf("clearRcvBuffer\n");
-	  receiveBuffer = new std::queue<std::string>();
-	  receiveIDs = new std::queue<int>();
+     receiveBuffer = new std::queue<std::string>();
+     receiveIDs = new std::queue<int>();
 
      receiveLock = 0;
 }
@@ -256,25 +256,28 @@ double Latency::getReceiveLatency() {
 
 void *Latency::startSendBallLoop(void *classRef) {
      ((Latency *) classRef)->ballSendingLoop();
+     printf("%d: Ball Thread Ending\n", ((Latency *) classRef)->ID);
 }
 
 void *Latency::startSendPaddleLoop(void *classRef) {
      ((Latency *) classRef)->paddleSendingLoop();
+     printf("%d: Paddle Thread Ending\n", ((Latency *) classRef)->ID);
 }
 
 void *Latency::startSendScoreLoop(void *classRef) {
      ((Latency *) classRef)->scoreSendingLoop();
+     printf("%d: score loop ending\n", ((Latency *) classRef)->ID);
 }
 
 
 void *Latency::startRcvLoop(void *classRef) {
      ((Latency *) classRef)->messageReceivingLoop();
-
+     printf("%d: Rcv loop ending\n", ((Latency *) classRef)->ID);
 }
 
 void Latency::sendBufferMessage(queue<std::string> *sendBuffer, queue<int> *sendIDs) {
-	  while (messageLock); // lock on send buffer
-	  messageLock = 1;
+     while (messageLock); // lock on send buffer
+     messageLock = 1;
 
      if (!sendBuffer->empty()) {
 	  int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
