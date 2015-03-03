@@ -545,3 +545,17 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 void Latency::stopThread() {
      sendAndReceive = false;
 }
+
+void Latency::printBufferInfo() {
+    cout << "Ball buffer:" << endl;
+    cout << "\taddress: " << &sendBallBuffer << endl;
+    cout << "\tsize: " << sendBallBuffer->size() << endl;
+
+    cout << "Paddle buffer:" << endl;
+    cout << "\taddress: " << &sendPaddleBuffer << endl;
+    cout << "\tsize: " << sendPaddleBuffer->size() << endl;
+
+    cout << "Score buffer:" << endl;
+    cout << "\taddress: " << &sendScoreBuffer << endl;
+    cout << "\tsize: " << sendScoreBuffer->size() << endl;
+}

@@ -96,6 +96,8 @@ public:
 
     void clearReceiveBuffer();
 
+    void printBufferInfo();
+
 
 };
 
