@@ -47,6 +47,7 @@ public:
     void setBallSpeed(double speedX, double speedY);
 
     void getBallPosition(std::string player, int &outX, int &outY);
+    void getBallPosition(int playerID, int &outX, int &outY);
 
     Player *getPlayerFromClientID(int clientID);
 

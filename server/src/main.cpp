@@ -105,7 +105,11 @@ void *GameLoop(void *arg) {
   while (true) {
     if (gameObjectsSet == true) {
       pongGame->update(1 / 60.0);
-
+      if(bufferC1->getClientLatency() > 500){
+	pongGame->setBallSpeed(1/bufferC1->getClientLatency(), currBallY - pongGame->bally);
+      } else if(bufferC2->getClientLatency() > 500){
+	pongGame->setBallSpeed(1/bufferC2->getClientLatency(), currBallY - pongGame->bally);
+	}
       vector<int> clientIDs = server.getClientIDs();
       for (int i = 0; i < clientIDs.size(); i++) {
 	sendBallPosition(clientIDs[i], currBallX, currBallY);
@@ -182,7 +186,7 @@ void sendBallPosition(int clientID, int &outx, int &outy) {
   ostringstream json;
   int x;
   int y;
-  pongGame->getBallPosition((pongGame->getPlayerFromClientID(clientID)->getName()), x, y);
+  pongGame->getBallPosition(clientID, x, y);
 
   json << "{\"phase\":\"ball_update\",\"ball_position\":[";
   json << x << ", " << y << "]}";
@@ -192,7 +196,7 @@ void sendBallPosition(int clientID, int &outx, int &outy) {
     bufferC2->sendMessage(clientID, json.str(), Latency::BALL);
 
   }
-  //    cout << json.str() << endl;
+  //  cout << json.str() << endl;
 
 
   outx = x;

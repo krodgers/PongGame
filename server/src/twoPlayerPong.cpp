@@ -98,6 +98,22 @@ void pong::getBallPosition(std::string player, int &outX, int &outY) {
     }
 
 }
+// Returns coordinates corrected for both players being on the left
+// i.e. when the ball is really on the right and player 2 wants coordinates,
+//                  will give coordinates as if that player 2 is on the left
+void pong::getBallPosition(int playerID, int &outX, int &outY) {
+  if (playerOne == getPlayerFromClientID(playerID)) {
+        outX = ballx;
+        outY = bally;
+  } else if (playerTwo == getPlayerFromClientID(playerID)) {
+        outX = boardWidth - ballx;
+        outY = bally;
+    } else {
+        printf("WARNING: getting ball position for non existant player %d\n", playerID);
+    }
+
+}
+
 
 
 // paddleDirection: 1/-1 for up/down

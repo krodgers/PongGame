@@ -18,6 +18,9 @@
 
 
 class Latency {
+ public:
+    enum PacketType { BALL, PADDLE, SCORE };
+
 private:
     friend class latencyTester;
 
@@ -37,8 +40,8 @@ private:
     webSocket *server;
     bool sendAndReceive;
     int messageThread;
-    int messageLock, receiveLock, sendLock;
-
+    //    int messageLock, receiveLock, sendLock;
+    pthread_mutex_t rcvLock, ballLock, paddleLock, scoreLock;
 
     void init(); // allocate all the memory things
     // deals with message server gets from client
@@ -50,10 +53,12 @@ private:
     void* sendingLoop();
     double clientLatency; // the latency from server to client
     double averageClientLatency;
+    void lockRightThing(PacketType);
+    void unlockRightThing(PacketType);
 
 public:
 
-    enum PacketType { BALL, PADDLE, SCORE };
+    //    enum PacketType { BALL, PADDLE, SCORE };
 
     Latency(pong *game, webSocket *serverToUse, int id);
 
@@ -62,7 +67,7 @@ public:
     ~Latency();
 
     int getID();
-
+    double getClientLatency(); // returns latency from server to client
     void stopThread();
 
     static void *startSendLoop(void *classRef);

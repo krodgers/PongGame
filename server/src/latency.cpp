@@ -60,7 +60,11 @@ Latency::~Latency() {
 	  delete sendScoreIDs;
      if (receiveIDs)
 	  delete receiveIDs;
-
+     pthread_mutex_destroy(&rcvLock);
+     pthread_mutex_destroy(&ballLock);
+     pthread_mutex_destroy(&paddleLock);
+     pthread_mutex_destroy(&scoreLock);
+     
 }
 
 // Initializes the memory objects
@@ -74,15 +78,23 @@ void Latency::init() {
      sendScoreIDs = new std::queue<int>;
      receiveIDs = new std::queue<int>;
      sendAndReceive = false;
-     messageLock = 0;
+     //messageLock = 0;
      clientLatency = 0;
-     receiveLock = 0;
+     // receiveLock = 0;
      totalNumPackets = 0;
+     rcvLock = PTHREAD_MUTEX_INITIALIZER;
+     ballLock = PTHREAD_MUTEX_INITIALIZER;
+     paddleLock = PTHREAD_MUTEX_INITIALIZER;
+     scoreLock = PTHREAD_MUTEX_INITIALIZER;
+
 }
 
 
 int Latency::getID() {
      return ID;
+}
+double Latency::getClientLatency(){
+     return clientLatency;
 }
 
 void Latency::setPongGame(pong *game) {
@@ -108,78 +120,71 @@ void Latency::clearSendBuffer(PacketType type) {
 
 // Clears out the send ball buffer
 void Latency::clearSendBallBuffer() {
-     while (messageLock);
-     messageLock = 1;
-     printf("%d:clearSendBallBuffer\n", ID);
-     //  delete sendBallBuffer;
-     // delete sendBallIDs;
+     pthread_mutex_lock(&ballLock);
+//     printf("%d:clearSendBallBuffer\n", ID);
      try {
-	  // sendBallBuffer = new std::queue<std::string>;
-	  //sendBallIDs = new std::queue<int>;
-      
-	  std::queue<std::string> *newQ = new std::queue<std::string>;
-	  std::queue<int> *newInt = new std::queue<int>;
-	  std::swap(*sendBallBuffer, *newQ);
-	  std::swap(*sendBallIDs, *newInt);
-
+	  delete sendBallBuffer;
+	  delete sendBallIDs;
+	  sendBallBuffer = new std::queue<std::string>;
+	  sendBallIDs = new std::queue<int>;
+	  // std::queue<std::string> *newQ = new std::queue<std::string>;
+	  // std::queue<int> *newInt = new std::queue<int>;
+	  // std::swap(*sendBallBuffer, *newQ);
+	  // std::swap(*sendBallIDs, *newInt);
 	  assert(sendBallIDs->size() == 0);
 	  assert(sendBallBuffer->size() == 0);
 
      } catch (const std::exception &except) {
 	  printf("Caught bad_alloc in Latency::clearSendBallBuffer\n");
      }
-     printf("successfully cleared ball buffer\n");
-     messageLock = 0;
+     pthread_mutex_unlock(&ballLock);
 }
 
 // Clears out the send paddle buffer
 void Latency::clearSendPaddleBuffer() {
-     while (messageLock);
-     messageLock = 1;
-     printf("%d:clearSendPaddleBuffer\n", ID);
-     //    delete sendPaddleBuffer;
-     //delete sendPaddleIDs;
-     //sendPaddleBuffer = new std::queue<std::string>;
-     //sendPaddleIDs = new std::queue<int>;
+     pthread_mutex_lock(&paddleLock);
+//     printf("%d:clearSendPaddleBuffer\n", ID);
+        delete sendPaddleBuffer;
+     delete sendPaddleIDs;
+     sendPaddleBuffer = new std::queue<std::string>;
+     sendPaddleIDs = new std::queue<int>;
 
-     std::queue<std::string> *newQ = new std::queue<std::string>;
-     std::queue<int> *newInt = new std::queue<int>;
-     std::swap(*sendPaddleBuffer, *newQ);
-     std::swap(*sendPaddleIDs, *newInt);
+     // std::queue<std::string> *newQ = new std::queue<std::string>;
+     // std::queue<int> *newInt = new std::queue<int>;
+     // std::swap(*sendPaddleBuffer, *newQ);
+     // std::swap(*sendPaddleIDs, *newInt);
 
-     messageLock = 0;
+     pthread_mutex_unlock(&paddleLock);
 }
 
 // Clears out the send score buffer
 void Latency::clearSendScoreBuffer() {
-     while (messageLock);
-     messageLock = 1;
-     printf("%d:clearSendScoreBuffer\n", ID);
+     pthread_mutex_lock(&scoreLock);
+     //    printf("%d:clearSendScoreBuffer\n", ID);
      try {
 
-	  //      delete sendScoreBuffer;
-	  //delete sendScoreIDs;
-	  //sendScoreBuffer = new std::queue<std::string>;
-	  //sendScoreIDs = new std::queue<int>;
-	  std::queue<std::string> *newQ = new std::queue<std::string>;
-	  std::queue<int> *newInt = new std::queue<int>;
-	  std::swap(*sendScoreBuffer, *newQ);
-	  std::swap(*sendScoreIDs, *newInt);      
+	       delete sendScoreBuffer;
+	  delete sendScoreIDs;
+	  sendScoreBuffer = new std::queue<std::string>;
+	  sendScoreIDs = new std::queue<int>;
+	  // std::queue<std::string> *newQ = new std::queue<std::string>;
+	  // std::queue<int> *newInt = new std::queue<int>;
+	  // std::swap(*sendScoreBuffer, *newQ);
+	  // std::swap(*sendScoreIDs, *newInt);      
 
 
      } catch (const std::exception &except) {
 	  printf("Caught bad_alloc in Latency::clearSendScoreBuffer()\n");
      }
 
-     messageLock = 0;
+     pthread_mutex_unlock(&scoreLock);
 }
 
 
 // Clears out the Receive buffer
 void Latency::clearReceiveBuffer() {
-     while (receiveLock);
-     receiveLock = 1;
-     printf("%d:clearRcvBuffer\n", ID);
+     pthread_mutex_lock(&rcvLock);
+//     printf("%d:clearRcvBuffer\n", ID);
 
      delete receiveBuffer;
      delete receiveIDs;
@@ -187,17 +192,15 @@ void Latency::clearReceiveBuffer() {
      receiveBuffer = new std::queue<std::string>;
      receiveIDs = new std::queue<int>;
 
-     receiveLock = 0;
+     pthread_mutex_unlock(&rcvLock);
 }
 
 // called when server gets message
 void Latency::receiveMessage(int clientID, std::string message) {
-     while (receiveLock);
-     receiveLock = 1;
-
+     pthread_mutex_lock(&rcvLock);
      receiveBuffer->push(message);
      receiveIDs->push(clientID);
-     receiveLock = 0;
+     pthread_mutex_unlock(&rcvLock);
 }
 
 queue<std::string> *Latency::getSendBuffer(PacketType type) {
@@ -235,33 +238,61 @@ queue<int> *Latency::getSendIDs(PacketType type) {
 // add message to send queue
 // will send after some Latency time
 void Latency::sendMessage(int clientID, std::string message, PacketType type) {
-     while (messageLock);
-     messageLock = 1;
+     lockRightThing(type);
      queue<std::string> *sendBuffer = getSendBuffer(type);
      queue<int> *sendIDs = getSendIDs(type);
      int buffsize = sendBuffer->size();
+     unlockRightThing(type);
+
      /* Do stuff for checking max buffer size and whatnot */
 //    cout << "Send buffer size in send message: " << sendBuffer->size() << endl;
 //    cout << "game objects set: " << gameObjectsSet << endl;
 //    cout << "condtion for buffer too large is: " << (sendBuffer->size() > (double) MAX_ALLOWED_DELAY / (double) (pongGame->getPlayerFromClientID(this->ID))->getAverageLatency()) << endl;
      if (gameObjectsSet && buffsize  > (double) MAX_ALLOWED_DELAY / (double) (pongGame->getPlayerFromClientID(this->ID))->getAverageLatency()) {
-	  messageLock = 0; // unlock so clearing buffer can lock
-	  cout << "buffer too large" << endl;
+//	  cout << "buffer too large" << endl;
 	  this->clearSendBuffer(type);
-	  //	messageLock = 0; // move lock out to here
-     } else {
-	  messageLock = 0; // unlock to avoid deadlock
 
      }
-     while (messageLock);
-     messageLock = 1;
+
+     
+     lockRightThing(type);
+
      sendBuffer = getSendBuffer(type);
      sendIDs = getSendIDs(type);
-     //    cout << "Pushing a packet" << endl;
      sendBuffer->push(addTimestamp(message));
      sendIDs->push(clientID);
-     messageLock = 0;
+
+     unlockRightThing(type);
 }
+
+
+void Latency::lockRightThing(PacketType type){
+    switch(type){
+     case BALL:
+	  pthread_mutex_lock(&ballLock);
+	  break;
+     case PADDLE:
+	  pthread_mutex_lock(&paddleLock);
+	  break;
+     case SCORE:
+	  pthread_mutex_lock(&scoreLock);
+	  break;
+     }
+}
+void Latency::unlockRightThing(PacketType type){
+    switch(type){
+     case BALL:
+	  pthread_mutex_unlock(&ballLock);
+	  break;
+     case PADDLE:
+	  pthread_mutex_unlock(&paddleLock);
+	  break;
+     case SCORE:
+	  pthread_mutex_unlock(&scoreLock);
+	  break;
+     }
+}
+
 
 // adds timestamp to message and returns stamped message
 // added bit looks like "time_stamp:hr,min,sec,millisec"
@@ -304,49 +335,46 @@ void *Latency::startRcvLoop(void *classRef) {
 }
 
 void Latency::sendBufferMessage() {
-     while (messageLock); // lock on send buffer
-     messageLock = 1;
-  
-     if (sendBallBuffer->size() > 0 || sendPaddleBuffer->size() > 0 || sendScoreBuffer->size() > 0) {
-	  
-	  int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
-	  Player *curPlayer = pongGame->getPlayerFromClientID(this->ID);
-	  Player *opponent = pongGame->getOpponent(curPlayer);
-	  if (totalNumPackets > 20 && opponent->getAverageLatency() > curPlayer->getAverageLatency()) {
-	       //cout << "Difference between " << curPlayer->getName() << "'s latency and " << opponent->getName() <<
-	       //        "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
+     	  int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
+     	  Player *curPlayer = pongGame->getPlayerFromClientID(this->ID);
+     	  Player *opponent = pongGame->getOpponent(curPlayer);
+     	  if (totalNumPackets > 20 && opponent->getAverageLatency() > curPlayer->getAverageLatency()) {
+     	       //cout << "Difference between " << curPlayer->getName() << "'s latency and " << opponent->getName() <<
+     	       //        "'s latency: " << opponent->getAverageLatency() - curPlayer->getAverageLatency() << endl;
 	       r += opponent->getAverageLatency() - curPlayer->getAverageLatency();
-	  }
-	  messageLock = 0;
+	       
+     	  }
+
 
 	  // Get all the info to send
-	  while(messageLock);
-	  messageLock = 1;
 	  std::string ballString = "", paddleString = "", scoreString = "";
 	  int ballID = -1, scoreID = -1, paddleID = -1;
 
+	  lockRightThing(BALL);
 	  if(sendBallBuffer->size() > 0){
 	       ballString = sendBallBuffer->front();
 	       ballID = sendBallIDs->front();
 	       sendBallIDs->pop();
 	       sendBallBuffer->pop();
-	    
 	  }
+	  unlockRightThing(BALL);
+	  lockRightThing(PADDLE);
 	  if(sendPaddleBuffer->size() > 0){
 	       paddleString = sendPaddleBuffer->front();
 	       paddleID = sendPaddleIDs->front(); 
 	       sendPaddleIDs->pop();
 	       sendPaddleBuffer->pop();
 	  }
+	  unlockRightThing(PADDLE);
+	  lockRightThing(SCORE);
 	  if(sendScoreBuffer->size() > 0){
 	       scoreString = sendScoreBuffer->front();
 	       scoreID = sendScoreIDs->front();
 	       sendScoreIDs->pop();
 	       sendScoreBuffer->pop();
 	  }
-     
+	  unlockRightThing(SCORE);
 
-	  messageLock = 0;
 
 	  // Send all of the info
 	  usleep(1000*r);
@@ -359,53 +387,6 @@ void Latency::sendBufferMessage() {
 	  if(scoreID != -1)
 	       server->wsSend(scoreID, scoreString);
 
-
-     }
-
-     // 	  //cout << "Send buffer size: " << sendBuffer->size() << endl;
-     // 	  while (messageLock);
-     // 	  messageLock = 1;
-     // 	  if (sendBallBuffer->size() > 0) {
-     // 	       std::string thingToSend = sendBallBuffer->front();
-     // 	       int clientID = sendBallIDs->front();
-     // 	       sendBallIDs->pop();
-     // 	       sendBallBuffer->pop();
-     // 	       messageLock = 0;
-     // 	       usleep(1000 * r);
-     // 	       server->wsSend(sendBallIDs->front(), sendBallBuffer->front());
-     // 	  } else {
-     // 	       messageLock = 0;
-     // 	  }
-
-     // 	  while (messageLock);
-     // 	  messageLock = 1;
-     // 	  if (sendPaddleBuffer->size() > 0) {
-     // 	       std::string thingToSend = sendPaddleBuffer->front();
-     // 	       int clientID = sendPaddleIDs->front();
-     // 	       sendPaddleIDs->pop();
-     // 	       sendPaddleBuffer->pop();
-     // 	       messageLock = 0;
-     // 	       usleep(1000 * r);
-     // 	       server->wsSend(sendPaddleIDs->front(), sendPaddleBuffer->front());
-     // 	  }
-
-
-
-     // 	  if (sendScoreBuffer->size() > 0) {
-     // 	       while (messageLock);
-     // 	       messageLock = 1;
-     // 	       std::string thingToSend = sendScoreBuffer->front();
-     // 	       int clientID = sendScoreIDs->front();
-     // 	       sendScoreIDs->pop();
-     // 	       sendScoreBuffer->pop();
-     // 	       messageLock = 0;
-     // 	       usleep(1000 * r);
-     // 	       server->wsSend(sendScoreIDs->front(), sendScoreBuffer->front());
-     // 	  }
-
-     // }
-     else
-	  messageLock = 0;
 
 }
 
@@ -442,23 +423,26 @@ void *Latency::messageReceivingLoop() {
 	  printf("WARNING: Unable to set cancellation on message Thread\n");
      // start sending and receiving
      while (sendAndReceive) {
+	  pthread_mutex_lock(&rcvLock);
 	  if (!receiveBuffer->empty()) {
 	       int r = rand() % ((latencyTimeMax + 1) - latencyTimeMin) + latencyTimeMin;
-	       usleep(1000 * r);
-	       while (receiveLock); // lock on receive buffer
-
-	       receiveLock = 1;
-	       handleIncomingMessage(receiveIDs->front(), receiveBuffer->front());
-	       //  cout << "Recv buffer size: " << receiveBuffer->size() << endl;
+	       std::string thingToRcv = receiveBuffer->front();
+	       int rcvID = receiveIDs->front();
 	       receiveIDs->pop();
 	       receiveBuffer->pop();
+	       pthread_mutex_unlock(&rcvLock);
+	      
+	       usleep(1000 * r);
+	       handleIncomingMessage(rcvID,thingToRcv);
+	       //  cout << "Recv buffer size: " << receiveBuffer->size() << endl;
 	       if (countR > 100) {
 		    countR = 0;
 		    printf("%d: Receive buffer size: %d\n", ID, (int) receiveBuffer->size());
 	       }
-	       receiveLock = 0;
 
 	       countR++;
+	  } else {
+	       pthread_mutex_unlock(&rcvLock);
 	  }
 
      }
@@ -484,9 +468,10 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 	  (unsigned long long) (tv.tv_usec) / 1000;
 
 
-     clientLatency += (currMillis - timeStamp);
-     totalNumPackets += 1;
-     averageClientLatency = clientLatency / totalNumPackets;
+//     clientLatency += (currMillis - timeStamp);
+       clientLatency = (currMillis - timeStamp);
+       totalNumPackets += 1;
+       averageClientLatency += ((averageClientLatency*totalNumPackets) + clientLatency) / totalNumPackets;
      (pongGame->getPlayerFromClientID(this->ID))->setAverageLatency(averageClientLatency);
      printf("Client %d Packet Latency: %d\n", ID, currMillis - timeStamp);
      printf("Total average Latency: %.4g\n", averageClientLatency);
