@@ -102,18 +102,16 @@ int main(int argc, char *argv[]) {
 void *GameLoop(void *arg) {
   int scoreUpdateCounter = 0;
   int currBallX, currBallY;
-  double frameRate = 1/60;
-  int curLat = 0;
+
+  ///////////// DELETE ME ?????????????????
+  
+  int sleepTime = 60;
+
+  ///////////////////////////////
+
   while (true) {
     if (gameObjectsSet == true) {
-      pongGame->update(frameRate);
-      if(bufferC1->getClientLatency() > frameRate*2000){
-	frameRate = (2*bufferC1->getClientLatency())/1000.0;
-	curLat = bufferC1->getClientLatency();
-      } else if(bufferC2->getClientLatency() > frameRate*2000){
-	frameRate = (2*bufferC2->getClientLatency())/1000.0;
-	curLat = bufferC2->getClientLatency();
-      }
+      pongGame->update(1/60);
       vector<int> clientIDs = server.getClientIDs();
       for (int i = 0; i < clientIDs.size(); i++) {
 	sendBallPosition(clientIDs[i], currBallX, currBallY);
@@ -126,13 +124,23 @@ void *GameLoop(void *arg) {
 	  scoreUpdateCounter = 0;
 	  sendScoreUpdate(clientIDs[i]);
 	}
-	if(scoreUpdateCounter % 10)
-	  printf("Latency: %d\nFrameRate: %.2f\n", curLat, frameRate);
       }
-	  printf("Latency: %d\nFrameRate: %.2f\n", curLat, frameRate);
-
       scoreUpdateCounter++;
-      usleep(1000000 / frameRate);
+      ///////////// DELETE ME ?????????????????
+      if(scoreUpdateCounter % 100 == 0) {
+	if(bufferC1->getClientLatency() > 100 || bufferC2->getClientLatency()){
+	  sleepTime = 60 + ((int)((bufferC1->getClientLatency() + bufferC2->getClientLatency())/2.0) % 100) / 1000.0;
+	  printf("sleepTime: %d\n", sleepTime);
+	  printf("res: %.4f\n", ((int)((bufferC1->getClientLatency() + bufferC2->getClientLatency())/2.0) % 100) / 1000.0);
+	}
+      }
+
+
+      ///////////////////////////////
+
+
+
+      usleep(1000000 / 60);
     }
   }
 }
