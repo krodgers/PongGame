@@ -16,9 +16,9 @@
 
 extern bool gameObjectsSet;
 
-#define LATENCY_TIME_MIN 50
-#define LATENCY_TIME_MAX 100
-#define MAX_ALLOWED_DELAY 1500
+#define LATENCY_TIME_MIN 0
+#define LATENCY_TIME_MAX 0
+#define MAX_ALLOWED_DELAY 500
 
 
 // Latency Constructors
@@ -468,10 +468,10 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 	  (unsigned long long) (tv.tv_usec) / 1000;
 
 
-//     clientLatency += (currMillis - timeStamp);
-       clientLatency = (currMillis - timeStamp);
+     clientLatency += (currMillis - timeStamp);
+//       clientLatency = (currMillis - timeStamp);
        totalNumPackets += 1;
-       averageClientLatency += ((averageClientLatency*totalNumPackets) + clientLatency) / totalNumPackets;
+       averageClientLatency += clientLatency / totalNumPackets;
      (pongGame->getPlayerFromClientID(this->ID))->setAverageLatency(averageClientLatency);
      printf("Client %d Packet Latency: %d\n", ID, currMillis - timeStamp);
      printf("Total average Latency: %.4g\n", averageClientLatency);

@@ -136,8 +136,10 @@ void sendPaddleUpdate(int clientID, int ballx, int bally) {
   Json::Value jsonToSend;
   Player *curPlayer = pongGame->players[clientID];
   Player *opponent = pongGame->getOpponent(curPlayer);
-
-  if (abs(curPlayer->getPaddleXPosition() - ballx) < (pongGame->boardWidth / 4)) {
+  int paddle = curPlayer->getPaddleXPosition();
+  int threshold = pongGame->boardWidth/8;
+  if (ballx < threshold || ballx > 3*threshold) {
+    //    printf("Sending more paddle updates\n");
     jsonToSend["phase"] = "opponent_paddle_update";
     vector<int> opponentPaddle;
     opponentPaddle = opponent->getPaddlePosition();
