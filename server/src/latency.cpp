@@ -16,9 +16,9 @@
 
 extern bool gameObjectsSet;
 
-#define LATENCY_TIME_MIN 0
-#define LATENCY_TIME_MAX 0
-#define MAX_ALLOWED_DELAY 500
+#define LATENCY_TIME_MIN 50
+#define LATENCY_TIME_MAX 100
+#define MAX_ALLOWED_DELAY 1200
 
 
 // Latency Constructors
