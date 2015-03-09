@@ -56,6 +56,7 @@ private:
     void lockRightThing(PacketType);
     void unlockRightThing(PacketType);
 
+
 public:
 
     //    enum PacketType { BALL, PADDLE, SCORE };
@@ -99,6 +100,7 @@ public:
 
     void printBufferInfo();
 
+    void setClientLatency(int clientID);
 
 };
 

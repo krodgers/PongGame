@@ -54,7 +54,7 @@ void showAvailableIP() {
     }
 
 #elif _WIN32
-
+    
     /* Variables used by GetIpAddrTable */
     PMIB_IPADDRTABLE pIPAddrTable;
     DWORD dwSize = 0;
@@ -84,7 +84,7 @@ void showAvailableIP() {
     }
     // Make a second call to GetIpAddrTable to get the
     // actual data we want
-    if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR ) {
+    if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR ) { 
         printf("GetIpAddrTable failed with error %d\n", dwRetVal);
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
                           (LPTSTR) & lpMsgBuf, 0, NULL)) {
@@ -185,7 +185,7 @@ bool webSocket::wsSendClientMessage(int clientID, unsigned char opcode, string m
             buf = new char[totalLength];
             buf[0] = fin | opcode;
             buf[1] = bufferLength;
-            memcpy(buf + 2, message.c_str(), message.size());
+            memcpy(buf + 2, message.substr(i * bufferSize, bufferLength).c_str(), bufferLength);
         }
         else if (bufferLength <= 65535) {
             // int payloadLength = WS_PAYLOAD_LENGTH_16;
@@ -195,7 +195,7 @@ bool webSocket::wsSendClientMessage(int clientID, unsigned char opcode, string m
             buf[1] = WS_PAYLOAD_LENGTH_16;
             buf[2] = bufferLength >> 8;
             buf[3] = bufferLength;
-            memcpy(buf + 4, message.c_str(), message.size());
+            memcpy(buf + 4, message.substr(i * bufferSize, bufferLength).c_str(), bufferLength);
         }
         else {
             // int payloadLength = WS_PAYLOAD_LENGTH_63;
@@ -211,7 +211,7 @@ bool webSocket::wsSendClientMessage(int clientID, unsigned char opcode, string m
             buf[7] = bufferLength >> 16;
             buf[8] = bufferLength >> 8;
             buf[9] = bufferLength;
-            memcpy(buf + 10, message.c_str(), message.size());
+            memcpy(buf + 10, message.substr(i * bufferSize, bufferLength).c_str(), bufferLength);
         }
 
         // send frame
@@ -296,6 +296,14 @@ bool webSocket::wsCheckSizeClientFrame(int clientID) {
             }
         }
 
+        if (client->FramePayloadDataLength >= 0) {
+            if (client->FramePayloadDataLength > 100000) {
+                client->FramePayloadDataLength = -1;
+                wsSendClientClose(clientID, WS_STATUS_MESSAGE_TOO_BIG);
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -352,10 +360,8 @@ bool webSocket::wsProcessClientMessage(int clientID, unsigned char opcode, strin
         wsRemoveClient(clientID);
     }
     else if (opcode == WS_OPCODE_TEXT || opcode == WS_OPCODE_BINARY) {
-        if (callOnMessage != NULL) {
-            string tmp = data.substr(0, dataLength);
+        if (callOnMessage != NULL)
             callOnMessage(clientID, data.substr(0, dataLength));
-        }
     }
     else {
         // unknown opcode
@@ -386,7 +392,7 @@ bool webSocket::wsProcessClientFrame(int clientID) {
         return false; // close socket, as no mask bit was sent from the client
 
     // fetch byte position where the mask key starts
-    int seek = client->FrameBytesRead <= 125 ? 2 : (client->FrameBytesRead <= 65535 ? 4 : 10);
+    int seek = client->FrameBytesRead <= 131 ? 2 : (client->FrameBytesRead <= 65543 ? 4 : 10);
 
     // read mask key
     char maskKey[4];
@@ -457,26 +463,26 @@ bool webSocket::wsProcessClientFrame(int clientID) {
     return true;
 }
 
-bool webSocket::wsBuildClientFrame(int clientID, char *buffer, int bufferLength) {
+bool webSocket::wsBuildClientFrame(int clientID, const char *buffer, int bufferLength) {
     wsClient *client = wsClients[clientID];
     // increase number of bytes read for the frame, and join buffer onto end of the frame buffer
     client->FrameBytesRead += bufferLength;
     client->FrameBuffer.append(buffer, bufferLength);
 
     // check if the length of the frame's payload data has been fetched, if not then attempt to fetch it from the frame buffer
-    if (wsCheckSizeClientFrame(clientID) == true) {
+    if (client->FramePayloadDataLength != -1 || wsCheckSizeClientFrame(clientID) == true) {
         // work out the header length of the frame
         int headerLength = (client->FramePayloadDataLength <= 125 ? 0 : (client->FramePayloadDataLength <= 65535 ? 2 : 8)) + 6;
 
         // check if all bytes have been received for the frame
         int frameLength = client->FramePayloadDataLength + headerLength;
         if (client->FrameBytesRead >= frameLength) {
-            char *nextFrameBytes;
             // check if too many bytes have been read for the frame (they are part of the next frame)
             int nextFrameBytesLength = client->FrameBytesRead - frameLength;
+            string nextFrameBytes;
             if (nextFrameBytesLength > 0) {
                 client->FrameBytesRead -= nextFrameBytesLength;
-                nextFrameBytes = buffer + frameLength;
+                nextFrameBytes = client->FrameBuffer.substr(frameLength, nextFrameBytesLength);
                 client->FrameBuffer = client->FrameBuffer.substr(0, frameLength);
             }
 
@@ -495,7 +501,7 @@ bool webSocket::wsBuildClientFrame(int clientID, char *buffer, int bufferLength)
                 return result;
 
             // build the next frame with the extra bytes
-            return wsBuildClientFrame(clientID, nextFrameBytes, nextFrameBytesLength);
+            return wsBuildClientFrame(clientID, nextFrameBytes.c_str(), nextFrameBytesLength);
         }
     }
 
@@ -635,7 +641,6 @@ void webSocket::wsAddClient(int socket, in_addr ip) {
         fdmax = socket;
 
     int clientID = wsGetNextClientID();
-    cout << clientID << endl;
     wsClient *newClient = new wsClient(socket, ip);
     if (clientID >= wsClients.size()) {
         wsClients.push_back(newClient);
@@ -711,15 +716,12 @@ void webSocket::startServer(int port) {
             for (int i = 0; i <= fdmax; i++) {
                 if (FD_ISSET(i, &read_fds)) {
                     if (i == listenfd) {
-                        vector<int> currentIDs = getClientIDs();
-                        if (currentIDs.size() <= 1) {
-                            socklen_t addrlen = sizeof(cli_addr);
-                            int newfd = accept(listenfd, (struct sockaddr *) &cli_addr, &addrlen);
-                            if (newfd != -1) {
-                                /* add new client */
-                                wsAddClient(newfd, cli_addr.sin_addr);
-                                printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), newfd);
-                            }
+                        socklen_t addrlen = sizeof(cli_addr);
+                        int newfd = accept(listenfd, (struct sockaddr *) &cli_addr, &addrlen);
+                        if (newfd != -1) {
+                            /* add new client */
+                            wsAddClient(newfd, cli_addr.sin_addr);
+                            printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), newfd);
                         }
                     }
                     else {
