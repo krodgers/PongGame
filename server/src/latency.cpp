@@ -473,8 +473,8 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
      totalNumPackets += 1;
      averageClientLatency = clientLatency/totalNumPackets;
      (pongGame->getPlayerFromClientID(this->ID))->setAverageLatency(averageClientLatency);
-     printf("Client %d Packet Latency: %d\n", ID, currMillis - timeStamp);
-     printf("Total average Latency: %.4g\n", averageClientLatency);
+     //     printf("Client %d Packet Latency: %d\n", ID, currMillis - timeStamp);
+     // printf("Total average Latency: %.4g\n", averageClientLatency);
      if (phaseString.compare("initial_dimensions") == 0) {
 
 	  const Json::Value mapDimJson = root["map_dimensions"];

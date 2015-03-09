@@ -111,36 +111,35 @@ void *GameLoop(void *arg) {
 
   while (true) {
     if (gameObjectsSet == true) {
-      pongGame->update(1/60);
+      pongGame->update(1.0/60.0);
       vector<int> clientIDs = server.getClientIDs();
       for (int i = 0; i < clientIDs.size(); i++) {
 	sendBallPosition(clientIDs[i], currBallX, currBallY);
 	sendPaddleUpdate(clientIDs[i], currBallX, currBallY);
       }
 
+      if(scoreUpdateCounter % 10 == 0){
+	scoreUpdateCounter = 0;
+
+	// if(i == bufferC1->getID())
+	//   printf("%d: Total average Latency: %.4g\n",i, bufferC1->getClientLatency());
+	// else
+	printf("Total average Latency: %.4g\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency())/2.0);
+      }
+      
       // Only send score updates sometimes
       if (scoreUpdateCounter % 2 == 0) {
+	
 	for (int i = 0; i < clientIDs.size(); i++) {
-	  scoreUpdateCounter = 0;
 	  sendScoreUpdate(clientIDs[i]);
 	}
+	
       }
+  
       scoreUpdateCounter++;
-      ///////////// DELETE ME ?????????????????
-      if(scoreUpdateCounter % 100 == 0) {
-	if(bufferC1->getClientLatency() > 100 || bufferC2->getClientLatency()){
-	  sleepTime = 60 + ((int)((bufferC1->getClientLatency() + bufferC2->getClientLatency())/2.0) % 100) / 1000.0;
-	  printf("sleepTime: %d\n", sleepTime);
-	  printf("res: %.4f\n", ((int)((bufferC1->getClientLatency() + bufferC2->getClientLatency())/2.0) % 100) / 1000.0);
-	}
-      }
-
-
-      ///////////////////////////////
-
-
-
-      usleep(1000000 / 60);
+      
+      
+      usleep(1000000.0 / 60.0);
     }
   }
 }
