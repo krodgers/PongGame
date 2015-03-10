@@ -550,7 +550,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
       long long thirdTimestamp = root["time_stamp_third"].asInt64();
       long long firstTimestamp = root["time_stamp_first"].asInt64();
 
-      long long networkLatency = ((fourthTimeStamp - firstTimestamp) - (thirdTimestamp - secondTimestamp))/2;
+      long long networkLatency = ((fourthTimeStamp - firstTimestamp) - (thirdTimestamp - secondTimestamp))/2.0;
 
       if(firstTimestamp > secondTimestamp)
 	cout << "GREATER" << endl;
@@ -593,6 +593,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
       Json::FastWriter writer;
       request["phase"] = "request_sync";
       request["clock_offset"] = offset;
+      cout << "sending offset " << offset << endl;
       //        sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
       sendAdministrativeMessage(clientID, writer.write(request));
    
@@ -627,6 +628,8 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
       //        sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
       if(clientID == ID)
 	sendAdministrativeMessage(clientID, writer.write(request));
+      cout << "sending offset " << offset << endl;
+
 
       // sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
 
