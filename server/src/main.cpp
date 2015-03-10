@@ -299,7 +299,7 @@ void closeHandler(int clientID) {
 
 void messageHandler(int clientID, std::string message) {
 
-    if (pongGame->getPlayerFromClientID(clientID) == pongGame->playerOne)
+  if (clientID == bufferC1->getID())
         bufferC1->receiveMessage(clientID, message);
     else
         bufferC2->receiveMessage(clientID, message);

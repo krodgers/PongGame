@@ -457,6 +457,8 @@ void *Latency::messageReceivingLoop() {
 
 // Processes the incoming message
 void Latency::handleIncomingMessage(int clientID, std::string message) {
+  if(clientID != ID) 
+    cout << ID << "IDS DONT MATCH " << clientID <<endl;
   // Let's parse it
   Json::Value root;
   Json::Reader reader;
@@ -550,13 +552,15 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 
       long long networkLatency = ((fourthTimeStamp - firstTimestamp) - (thirdTimestamp - secondTimestamp))/2;
 
-
+      if(firstTimestamp > secondTimestamp)
+	cout << "GREATER" << endl;
       long long clockOffset = (secondTimestamp - firstTimestamp) - networkLatency;
       
       offset = clockOffset;
-      printf("%d: offset  %llu\n", ID, offset); 
-     
-      //      cout << "clockoffset: " << clockOffset << endl;
+      printf("first: %llu\nsecond: %llu\nthird: %llu\nfourth: %llu\n", firstTimestamp, secondTimestamp, thirdTimestamp, fourthTimeStamp);
+      cout << ID << ": offset " << offset << endl;
+      
+      //cout << "clockoffset: " << clockOffset << endl;
       cout << "network Latency: " << networkLatency << endl;
     } else if (phaseString.compare("exchange_info") == 0) {
       if (opponent->getAssignedClientID() != -1) {
