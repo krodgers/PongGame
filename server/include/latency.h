@@ -24,7 +24,11 @@ class Latency {
 private:
     friend class latencyTester;
 
-    int ID; // to identify which client this buffer is associated with
+  
+  int ID; // to identify which client this buffer is associated with
+  long long offset;
+    /* long long offset0; */
+    /* long long offset1; */
     int totalNumPackets;
     std::queue<std::string> *sendBallBuffer;
     std::queue<std::string> *sendPaddleBuffer;
