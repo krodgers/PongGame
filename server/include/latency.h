@@ -106,6 +106,8 @@ public:
 
     void setClientLatency(int clientID);
 
+    long long getClockOffset();
+
 };
 
 

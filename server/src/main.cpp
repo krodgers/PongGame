@@ -71,7 +71,7 @@ bool stopThread(int clientID);// Call when messages should no longer be sent/rec
 
 int main(int argc, char *argv[]) {
 
-  //  long ntpTime = getNtpTime();
+    //  long ntpTime = getNtpTime();
 
     int port;
     gameObjectsSet = false;
@@ -114,7 +114,7 @@ void *GameLoop(void *arg) {
                 sendBallPosition(clientIDs[i], currBallX, currBallY);
                 sendPaddleUpdate(clientIDs[i], currBallX, currBallY);
             }
-	    //            printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
+            //            printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
 
             if (scoreUpdateCounter % 10 == 0) {
                 scoreUpdateCounter = 0;
@@ -122,7 +122,7 @@ void *GameLoop(void *arg) {
                 // if(i == bufferC1->getID())
                 //   printf("%d: Total average Latency: %.4g\n",i, bufferC1->getClientLatency());
                 // else
-		//   printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
+                //   printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
             }
 
             // Only send score updates sometimes
@@ -164,6 +164,9 @@ void sendPaddleUpdate(int clientID, int ballx, int bally) {
         } else {
             bufferC2->sendMessage(clientID, writer.write(jsonToSend), Latency::PADDLE);
         }
+
+
+
     }
 
 }
@@ -189,6 +192,19 @@ void sendScoreUpdate(int clientID) {
         bufferC1->sendMessage(clientID, writer.write(jsonToSend), Latency::SCORE);
     } else {
         bufferC2->sendMessage(clientID, writer.write(jsonToSend), Latency::SCORE);
+    }
+
+    // send an update to the client for the latency
+    Json::Value request;
+    request["phase"] = "request_sync";
+
+    if (clientID = bufferC1->getID()) {
+        request["clock_offset"] = bufferC1->getClockOffset();
+        bufferC1->sendAdministrativeMessage(clientID, writer.write(request));
+    }
+    else {
+        request["clock_offset"] = bufferC2->getClockOffset();
+        bufferC2->sendAdministrativeMessage(clientID, writer.write(request));
     }
 
 
@@ -299,7 +315,7 @@ void closeHandler(int clientID) {
 
 void messageHandler(int clientID, std::string message) {
 
-  if (clientID == bufferC1->getID())
+    if (clientID == bufferC1->getID())
         bufferC1->receiveMessage(clientID, message);
     else
         bufferC2->receiveMessage(clientID, message);
