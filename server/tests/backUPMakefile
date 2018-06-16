@@ -1,0 +1,23 @@
+CC = g++
+CFLAGS = -g -c -I../include
+LDFLAGS = 
+SOURCES = ../src/main.cpp ../src/websocket.cpp ../src/sha1.cpp ../src/base64.cpp
+GAMESOURCES = ../src/ball.cpp ../src/paddle.cpp ../src/pongGame.cpp ../src/gameMain.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = ../pong
+
+#all: $(SOURCES) $(EXECUTABLE) mvobj
+all: $(GAMESOURCES) $(EXECUTABLE) mvobj
+
+
+$(EXECUTABLE): $(OBJECTS) 
+	$(CC) $(LDFLAGS) $(OBJECTS) -o ./$@
+
+.cpp.o:
+	$(CC) $(CFLAGS) $< -o $@
+
+mvobj:
+	-mv -t . ../src/*.o server
+
+clean:
+	rm -rf *o $(EXECUTABLE)

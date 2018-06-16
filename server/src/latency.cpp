@@ -16,8 +16,8 @@
 
 extern bool gameObjectsSet;
 
-#define LATENCY_TIME_MIN 0
-#define LATENCY_TIME_MAX 0
+#define LATENCY_TIME_MIN 50
+#define LATENCY_TIME_MAX 100
 #define MAX_ALLOWED_DELAY 1200
 
 
@@ -401,7 +401,7 @@ void Latency::sendAdministrativeMessage(int clientID, string message) {
     string lateMessage = addTimestamp(message);
     usleep(1000 * r);
     server->wsSend(clientID, lateMessage);
-    cout << "Send admin client:" << clientID << ", message: " << message << endl;
+    //cout << "Send admin client:" << clientID << ", message: " << message << endl;
 
 }
 
@@ -444,7 +444,7 @@ void *Latency::messageReceivingLoop() {
             //  cout << "Recv buffer size: " << receiveBuffer->size() << endl;
             if (countR > 100) {
                 countR = 0;
-                printf("%d: Receive buffer size: %d\n", ID, (int) receiveBuffer->size());
+		//                printf("%d: Receive buffer size: %d\n", ID, (int) receiveBuffer->size());
             }
 
             countR++;
@@ -526,7 +526,13 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         json << "\"ball_size\":" << ballRadius << "}";
 
         sendAdministrativeMessage(clientID, json.str());
+	Json::Value request;
+        Json::FastWriter writer;
+        request["phase"] = "request_sync";
+        request["clock_offset"] = offset;
 
+	//	sendAdministrativeMessage(clientID, writer.write(request));
+    
     } else if (phaseString.compare("ready_to_start") == 0) {
         cout << "Client " << clientID << " ready_to_start" << endl;
 
@@ -543,7 +549,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         request["phase"] = "request_sync";
         request["clock_offset"] = offset;
         //        sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
-        sendAdministrativeMessage(clientID, writer.write(request));
+	//sendAdministrativeMessage(clientID, writer.write(request));
     } else if (phaseString.compare("reply_sync") == 0) {
         long long fourthTimeStamp = currMillis;
         long long secondTimestamp = root["time_stamp_second"].asInt64();
@@ -552,16 +558,14 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
 
         long long networkLatency = ((fourthTimeStamp - firstTimestamp) - (thirdTimestamp - secondTimestamp)) / 2;
 
-        if (firstTimestamp > secondTimestamp)
-            cout << "GREATER" << endl;
         long long clockOffset = (secondTimestamp - firstTimestamp) - networkLatency;
 
         offset = clockOffset;
-        printf("first: %llu\nsecond: %llu\nthird: %llu\nfourth: %llu\n", firstTimestamp, secondTimestamp, thirdTimestamp, fourthTimeStamp);
-        cout << ID << ": offset " << offset << endl;
+	//        printf("first: %llu\nsecond: %llu\nthird: %llu\nfourth: %llu\n", firstTimestamp, secondTimestamp, thirdTimestamp, fourthTimeStamp);
+	//    cout << ID << ": offset " << offset << endl;
 
         //cout << "clockoffset: " << clockOffset << endl;
-        cout << "network Latency: " << networkLatency << endl;
+	// cout << "network Latency: " << networkLatency << endl;
     } else if (phaseString.compare("exchange_info") == 0) {
         if (opponent->getAssignedClientID() != -1) {
 
@@ -594,7 +598,7 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         request["phase"] = "request_sync";
         request["clock_offset"] = offset;
         //        sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
-        sendAdministrativeMessage(clientID, writer.write(request));
+	//   sendAdministrativeMessage(clientID, writer.write(request));
 
 
     } else if (phaseString.compare("paddle_update") == 0) {
@@ -616,19 +620,6 @@ void Latency::handleIncomingMessage(int clientID, std::string message) {
         else {
             curPlayer->setPaddlePosition(984, paddlePos[1]);
         }
-
-
-        ///////// DELETE ME /////////////
-//        Json::Value request;
-//        Json::FastWriter writer;
-//        request["phase"] = "request_sync";
-//        request["clock_offset"] = offset;
-//        //        sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
-//        if (clientID == ID)
-//            sendAdministrativeMessage(clientID, writer.write(request));
-
-        // sendAdministrativeMessage(clientID, "{\"phase\":\"request_sync\"}");
->>>>>>> 5c4393fe7943991c199e7762d0a244aa96f7a692
 
     } else if (phaseString.compare("disconnect") == 0) {
         // assuming that only 2 clients are going to be allowed to connect

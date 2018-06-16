@@ -114,15 +114,15 @@ void *GameLoop(void *arg) {
                 sendBallPosition(clientIDs[i], currBallX, currBallY);
                 sendPaddleUpdate(clientIDs[i], currBallX, currBallY);
             }
-            //            printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
+                       printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
 
             if (scoreUpdateCounter % 10 == 0) {
                 scoreUpdateCounter = 0;
 
-                // if(i == bufferC1->getID())
-                //   printf("%d: Total average Latency: %.4g\n",i, bufferC1->getClientLatency());
-                // else
-                //   printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC1->getClientLatency()) / 2.0);
+                 // if(i == bufferC1->getID())
+                 //   printf("%d: Total average Latency: %.4g\n",i, bufferC1->getClientLatency());
+                 // else
+                 //   printf("Total average Latency: %f\n", (bufferC2->getClientLatency() + bufferC			  1->getClientLatency()) / 2.0);
             }
 
             // Only send score updates sometimes
@@ -198,7 +198,7 @@ void sendScoreUpdate(int clientID) {
     Json::Value request;
     request["phase"] = "request_sync";
 
-    if (clientID = bufferC1->getID()) {
+    if (clientID == bufferC1->getID()) {
         request["clock_offset"] = bufferC1->getClockOffset();
         bufferC1->sendAdministrativeMessage(clientID, writer.write(request));
     }
@@ -206,7 +206,7 @@ void sendScoreUpdate(int clientID) {
         request["clock_offset"] = bufferC2->getClockOffset();
         bufferC2->sendAdministrativeMessage(clientID, writer.write(request));
     }
-
+    
 
 }
 
